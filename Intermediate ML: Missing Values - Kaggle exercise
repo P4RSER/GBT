@@ -1,0 +1,2400 @@
+{
+ "cells": [
+  {
+   "cell_type": "markdown",
+   "id": "1dd837ed",
+   "metadata": {
+    "papermill": {
+     "duration": 0.006142,
+     "end_time": "2026-04-01T17:37:44.433342",
+     "exception": false,
+     "start_time": "2026-04-01T17:37:44.427200",
+     "status": "completed"
+    },
+    "tags": []
+   },
+   "source": [
+    "**This notebook is an exercise in the [Intermediate Machine Learning](https://www.kaggle.com/learn/intermediate-machine-learning) course.  You can reference the tutorial at [this link](https://www.kaggle.com/alexisbcook/missing-values).**\n",
+    "\n",
+    "---\n"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "15f59ffd",
+   "metadata": {
+    "papermill": {
+     "duration": 0.004571,
+     "end_time": "2026-04-01T17:37:44.443405",
+     "exception": false,
+     "start_time": "2026-04-01T17:37:44.438834",
+     "status": "completed"
+    },
+    "tags": []
+   },
+   "source": [
+    "Now it's your turn to test your new knowledge of **missing values** handling. You'll probably find it makes a big difference.\n",
+    "\n",
+    "# Setup\n",
+    "\n",
+    "The questions will give you feedback on your work. Run the following cell to set up the feedback system."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 1,
+   "id": "1725d31c",
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2026-04-01T17:37:44.454282Z",
+     "iopub.status.busy": "2026-04-01T17:37:44.454028Z",
+     "iopub.status.idle": "2026-04-01T17:37:46.149931Z",
+     "shell.execute_reply": "2026-04-01T17:37:46.148741Z"
+    },
+    "papermill": {
+     "duration": 1.70321,
+     "end_time": "2026-04-01T17:37:46.151486",
+     "exception": false,
+     "start_time": "2026-04-01T17:37:44.448276",
+     "status": "completed"
+    },
+    "tags": []
+   },
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "Setup Complete\n"
+     ]
+    }
+   ],
+   "source": [
+    "# Set up code checking\n",
+    "import os\n",
+    "if not os.path.exists(\"../input/train.csv\"):\n",
+    "    os.symlink(\"../input/home-data-for-ml-course/train.csv\", \"../input/train.csv\")  \n",
+    "    os.symlink(\"../input/home-data-for-ml-course/test.csv\", \"../input/test.csv\") \n",
+    "from learntools.core import binder\n",
+    "binder.bind(globals())\n",
+    "from learntools.ml_intermediate.ex2 import *\n",
+    "print(\"Setup Complete\")"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "8597f093",
+   "metadata": {
+    "papermill": {
+     "duration": 0.004595,
+     "end_time": "2026-04-01T17:37:46.161586",
+     "exception": false,
+     "start_time": "2026-04-01T17:37:46.156991",
+     "status": "completed"
+    },
+    "tags": []
+   },
+   "source": [
+    "In this exercise, you will work with data from the [Housing Prices Competition for Kaggle Learn Users](https://www.kaggle.com/c/home-data-for-ml-course). \n",
+    "\n",
+    "![Ames Housing dataset image](https://storage.googleapis.com/kaggle-media/learn/images/lTJVG4e.png)\n",
+    "\n",
+    "Run the next code cell without changes to load the training and validation sets in `X_train`, `X_valid`, `y_train`, and `y_valid`.  The test set is loaded in `X_test`."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 2,
+   "id": "64382adb",
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2026-04-01T17:37:46.172728Z",
+     "iopub.status.busy": "2026-04-01T17:37:46.172318Z",
+     "iopub.status.idle": "2026-04-01T17:37:47.793218Z",
+     "shell.execute_reply": "2026-04-01T17:37:47.792410Z"
+    },
+    "papermill": {
+     "duration": 1.628245,
+     "end_time": "2026-04-01T17:37:47.794763",
+     "exception": false,
+     "start_time": "2026-04-01T17:37:46.166518",
+     "status": "completed"
+    },
+    "tags": []
+   },
+   "outputs": [],
+   "source": [
+    "import pandas as pd\n",
+    "from sklearn.model_selection import train_test_split\n",
+    "\n",
+    "# Read the data\n",
+    "X_full = pd.read_csv('../input/train.csv', index_col='Id')\n",
+    "X_test_full = pd.read_csv('../input/test.csv', index_col='Id')\n",
+    "\n",
+    "# Remove rows with missing target, separate target from predictors\n",
+    "X_full.dropna(axis=0, subset=['SalePrice'], inplace=True)\n",
+    "y = X_full.SalePrice\n",
+    "X_full.drop(['SalePrice'], axis=1, inplace=True)\n",
+    "\n",
+    "# To keep things simple, we'll use only numerical predictors\n",
+    "X = X_full.select_dtypes(exclude=['object'])\n",
+    "X_test = X_test_full.select_dtypes(exclude=['object'])\n",
+    "\n",
+    "# Break off validation set from training data\n",
+    "X_train, X_valid, y_train, y_valid = train_test_split(X, y, train_size=0.8, test_size=0.2,\n",
+    "                                                      random_state=0)"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "9b4c3b57",
+   "metadata": {
+    "papermill": {
+     "duration": 0.004753,
+     "end_time": "2026-04-01T17:37:47.804863",
+     "exception": false,
+     "start_time": "2026-04-01T17:37:47.800110",
+     "status": "completed"
+    },
+    "tags": []
+   },
+   "source": [
+    "Use the next code cell to print the first five rows of the data."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 3,
+   "id": "8f8be988",
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2026-04-01T17:37:47.816354Z",
+     "iopub.status.busy": "2026-04-01T17:37:47.816074Z",
+     "iopub.status.idle": "2026-04-01T17:37:47.840644Z",
+     "shell.execute_reply": "2026-04-01T17:37:47.839867Z"
+    },
+    "papermill": {
+     "duration": 0.031982,
+     "end_time": "2026-04-01T17:37:47.841791",
+     "exception": false,
+     "start_time": "2026-04-01T17:37:47.809809",
+     "status": "completed"
+    },
+    "tags": []
+   },
+   "outputs": [
+    {
+     "name": "stderr",
+     "output_type": "stream",
+     "text": [
+      "/usr/local/lib/python3.11/dist-packages/pandas/io/formats/format.py:1458: RuntimeWarning: invalid value encountered in greater\n",
+      "  has_large_values = (abs_vals > 1e6).any()\n",
+      "/usr/local/lib/python3.11/dist-packages/pandas/io/formats/format.py:1459: RuntimeWarning: invalid value encountered in less\n",
+      "  has_small_values = ((abs_vals < 10 ** (-self.digits)) & (abs_vals > 0)).any()\n",
+      "/usr/local/lib/python3.11/dist-packages/pandas/io/formats/format.py:1459: RuntimeWarning: invalid value encountered in greater\n",
+      "  has_small_values = ((abs_vals < 10 ** (-self.digits)) & (abs_vals > 0)).any()\n",
+      "/usr/local/lib/python3.11/dist-packages/pandas/io/formats/format.py:1458: RuntimeWarning: invalid value encountered in greater\n",
+      "  has_large_values = (abs_vals > 1e6).any()\n",
+      "/usr/local/lib/python3.11/dist-packages/pandas/io/formats/format.py:1459: RuntimeWarning: invalid value encountered in less\n",
+      "  has_small_values = ((abs_vals < 10 ** (-self.digits)) & (abs_vals > 0)).any()\n",
+      "/usr/local/lib/python3.11/dist-packages/pandas/io/formats/format.py:1459: RuntimeWarning: invalid value encountered in greater\n",
+      "  has_small_values = ((abs_vals < 10 ** (-self.digits)) & (abs_vals > 0)).any()\n"
+     ]
+    },
+    {
+     "data": {
+      "text/html": [
+       "<div>\n",
+       "<style scoped>\n",
+       "    .dataframe tbody tr th:only-of-type {\n",
+       "        vertical-align: middle;\n",
+       "    }\n",
+       "\n",
+       "    .dataframe tbody tr th {\n",
+       "        vertical-align: top;\n",
+       "    }\n",
+       "\n",
+       "    .dataframe thead th {\n",
+       "        text-align: right;\n",
+       "    }\n",
+       "</style>\n",
+       "<table border=\"1\" class=\"dataframe\">\n",
+       "  <thead>\n",
+       "    <tr style=\"text-align: right;\">\n",
+       "      <th></th>\n",
+       "      <th>MSSubClass</th>\n",
+       "      <th>LotFrontage</th>\n",
+       "      <th>LotArea</th>\n",
+       "      <th>OverallQual</th>\n",
+       "      <th>OverallCond</th>\n",
+       "      <th>YearBuilt</th>\n",
+       "      <th>YearRemodAdd</th>\n",
+       "      <th>MasVnrArea</th>\n",
+       "      <th>BsmtFinSF1</th>\n",
+       "      <th>BsmtFinSF2</th>\n",
+       "      <th>...</th>\n",
+       "      <th>GarageArea</th>\n",
+       "      <th>WoodDeckSF</th>\n",
+       "      <th>OpenPorchSF</th>\n",
+       "      <th>EnclosedPorch</th>\n",
+       "      <th>3SsnPorch</th>\n",
+       "      <th>ScreenPorch</th>\n",
+       "      <th>PoolArea</th>\n",
+       "      <th>MiscVal</th>\n",
+       "      <th>MoSold</th>\n",
+       "      <th>YrSold</th>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>Id</th>\n",
+       "      <th></th>\n",
+       "      <th></th>\n",
+       "      <th></th>\n",
+       "      <th></th>\n",
+       "      <th></th>\n",
+       "      <th></th>\n",
+       "      <th></th>\n",
+       "      <th></th>\n",
+       "      <th></th>\n",
+       "      <th></th>\n",
+       "      <th></th>\n",
+       "      <th></th>\n",
+       "      <th></th>\n",
+       "      <th></th>\n",
+       "      <th></th>\n",
+       "      <th></th>\n",
+       "      <th></th>\n",
+       "      <th></th>\n",
+       "      <th></th>\n",
+       "      <th></th>\n",
+       "      <th></th>\n",
+       "    </tr>\n",
+       "  </thead>\n",
+       "  <tbody>\n",
+       "    <tr>\n",
+       "      <th>619</th>\n",
+       "      <td>20</td>\n",
+       "      <td>90.0</td>\n",
+       "      <td>11694</td>\n",
+       "      <td>9</td>\n",
+       "      <td>5</td>\n",
+       "      <td>2007</td>\n",
+       "      <td>2007</td>\n",
+       "      <td>452.0</td>\n",
+       "      <td>48</td>\n",
+       "      <td>0</td>\n",
+       "      <td>...</td>\n",
+       "      <td>774</td>\n",
+       "      <td>0</td>\n",
+       "      <td>108</td>\n",
+       "      <td>0</td>\n",
+       "      <td>0</td>\n",
+       "      <td>260</td>\n",
+       "      <td>0</td>\n",
+       "      <td>0</td>\n",
+       "      <td>7</td>\n",
+       "      <td>2007</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>871</th>\n",
+       "      <td>20</td>\n",
+       "      <td>60.0</td>\n",
+       "      <td>6600</td>\n",
+       "      <td>5</td>\n",
+       "      <td>5</td>\n",
+       "      <td>1962</td>\n",
+       "      <td>1962</td>\n",
+       "      <td>0.0</td>\n",
+       "      <td>0</td>\n",
+       "      <td>0</td>\n",
+       "      <td>...</td>\n",
+       "      <td>308</td>\n",
+       "      <td>0</td>\n",
+       "      <td>0</td>\n",
+       "      <td>0</td>\n",
+       "      <td>0</td>\n",
+       "      <td>0</td>\n",
+       "      <td>0</td>\n",
+       "      <td>0</td>\n",
+       "      <td>8</td>\n",
+       "      <td>2009</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>93</th>\n",
+       "      <td>30</td>\n",
+       "      <td>80.0</td>\n",
+       "      <td>13360</td>\n",
+       "      <td>5</td>\n",
+       "      <td>7</td>\n",
+       "      <td>1921</td>\n",
+       "      <td>2006</td>\n",
+       "      <td>0.0</td>\n",
+       "      <td>713</td>\n",
+       "      <td>0</td>\n",
+       "      <td>...</td>\n",
+       "      <td>432</td>\n",
+       "      <td>0</td>\n",
+       "      <td>0</td>\n",
+       "      <td>44</td>\n",
+       "      <td>0</td>\n",
+       "      <td>0</td>\n",
+       "      <td>0</td>\n",
+       "      <td>0</td>\n",
+       "      <td>8</td>\n",
+       "      <td>2009</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>818</th>\n",
+       "      <td>20</td>\n",
+       "      <td>NaN</td>\n",
+       "      <td>13265</td>\n",
+       "      <td>8</td>\n",
+       "      <td>5</td>\n",
+       "      <td>2002</td>\n",
+       "      <td>2002</td>\n",
+       "      <td>148.0</td>\n",
+       "      <td>1218</td>\n",
+       "      <td>0</td>\n",
+       "      <td>...</td>\n",
+       "      <td>857</td>\n",
+       "      <td>150</td>\n",
+       "      <td>59</td>\n",
+       "      <td>0</td>\n",
+       "      <td>0</td>\n",
+       "      <td>0</td>\n",
+       "      <td>0</td>\n",
+       "      <td>0</td>\n",
+       "      <td>7</td>\n",
+       "      <td>2008</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>303</th>\n",
+       "      <td>20</td>\n",
+       "      <td>118.0</td>\n",
+       "      <td>13704</td>\n",
+       "      <td>7</td>\n",
+       "      <td>5</td>\n",
+       "      <td>2001</td>\n",
+       "      <td>2002</td>\n",
+       "      <td>150.0</td>\n",
+       "      <td>0</td>\n",
+       "      <td>0</td>\n",
+       "      <td>...</td>\n",
+       "      <td>843</td>\n",
+       "      <td>468</td>\n",
+       "      <td>81</td>\n",
+       "      <td>0</td>\n",
+       "      <td>0</td>\n",
+       "      <td>0</td>\n",
+       "      <td>0</td>\n",
+       "      <td>0</td>\n",
+       "      <td>1</td>\n",
+       "      <td>2006</td>\n",
+       "    </tr>\n",
+       "  </tbody>\n",
+       "</table>\n",
+       "<p>5 rows × 36 columns</p>\n",
+       "</div>"
+      ],
+      "text/plain": [
+       "     MSSubClass  LotFrontage  LotArea  OverallQual  OverallCond  YearBuilt  \\\n",
+       "Id                                                                           \n",
+       "619          20         90.0    11694            9            5       2007   \n",
+       "871          20         60.0     6600            5            5       1962   \n",
+       "93           30         80.0    13360            5            7       1921   \n",
+       "818          20          NaN    13265            8            5       2002   \n",
+       "303          20        118.0    13704            7            5       2001   \n",
+       "\n",
+       "     YearRemodAdd  MasVnrArea  BsmtFinSF1  BsmtFinSF2  ...  GarageArea  \\\n",
+       "Id                                                     ...               \n",
+       "619          2007       452.0          48           0  ...         774   \n",
+       "871          1962         0.0           0           0  ...         308   \n",
+       "93           2006         0.0         713           0  ...         432   \n",
+       "818          2002       148.0        1218           0  ...         857   \n",
+       "303          2002       150.0           0           0  ...         843   \n",
+       "\n",
+       "     WoodDeckSF  OpenPorchSF  EnclosedPorch  3SsnPorch  ScreenPorch  PoolArea  \\\n",
+       "Id                                                                              \n",
+       "619           0          108              0          0          260         0   \n",
+       "871           0            0              0          0            0         0   \n",
+       "93            0            0             44          0            0         0   \n",
+       "818         150           59              0          0            0         0   \n",
+       "303         468           81              0          0            0         0   \n",
+       "\n",
+       "     MiscVal  MoSold  YrSold  \n",
+       "Id                            \n",
+       "619        0       7    2007  \n",
+       "871        0       8    2009  \n",
+       "93         0       8    2009  \n",
+       "818        0       7    2008  \n",
+       "303        0       1    2006  \n",
+       "\n",
+       "[5 rows x 36 columns]"
+      ]
+     },
+     "execution_count": 3,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "source": [
+    "X_train.head()"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "e098e9fd",
+   "metadata": {
+    "papermill": {
+     "duration": 0.004833,
+     "end_time": "2026-04-01T17:37:47.851917",
+     "exception": false,
+     "start_time": "2026-04-01T17:37:47.847084",
+     "status": "completed"
+    },
+    "tags": []
+   },
+   "source": [
+    "You can already see a few missing values in the first several rows.  In the next step, you'll obtain a more comprehensive understanding of the missing values in the dataset.\n",
+    "\n",
+    "# Step 1: Preliminary investigation\n",
+    "\n",
+    "Run the code cell below without changes."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 4,
+   "id": "fefd978f",
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2026-04-01T17:37:47.863332Z",
+     "iopub.status.busy": "2026-04-01T17:37:47.863046Z",
+     "iopub.status.idle": "2026-04-01T17:37:47.869690Z",
+     "shell.execute_reply": "2026-04-01T17:37:47.868723Z"
+    },
+    "papermill": {
+     "duration": 0.014365,
+     "end_time": "2026-04-01T17:37:47.871265",
+     "exception": false,
+     "start_time": "2026-04-01T17:37:47.856900",
+     "status": "completed"
+    },
+    "tags": []
+   },
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "(1168, 36)\n",
+      "LotFrontage    212\n",
+      "MasVnrArea       6\n",
+      "GarageYrBlt     58\n",
+      "dtype: int64\n"
+     ]
+    }
+   ],
+   "source": [
+    "# Shape of training data (num_rows, num_columns)\n",
+    "print(X_train.shape)\n",
+    "\n",
+    "# Number of missing values in each column of training data\n",
+    "missing_val_count_by_column = (X_train.isnull().sum())\n",
+    "print(missing_val_count_by_column[missing_val_count_by_column > 0])"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "fb1e7a82",
+   "metadata": {
+    "papermill": {
+     "duration": 0.005012,
+     "end_time": "2026-04-01T17:37:47.882001",
+     "exception": false,
+     "start_time": "2026-04-01T17:37:47.876989",
+     "status": "completed"
+    },
+    "tags": []
+   },
+   "source": [
+    "### Part A\n",
+    "\n",
+    "Use the above output to answer the questions below."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 5,
+   "id": "b36392c2",
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2026-04-01T17:37:47.894257Z",
+     "iopub.status.busy": "2026-04-01T17:37:47.893982Z",
+     "iopub.status.idle": "2026-04-01T17:37:47.900294Z",
+     "shell.execute_reply": "2026-04-01T17:37:47.899655Z"
+    },
+    "papermill": {
+     "duration": 0.013677,
+     "end_time": "2026-04-01T17:37:47.901473",
+     "exception": false,
+     "start_time": "2026-04-01T17:37:47.887796",
+     "status": "completed"
+    },
+    "tags": []
+   },
+   "outputs": [
+    {
+     "data": {
+      "application/javascript": [
+       "parent.postMessage({\"jupyterEvent\": \"custom.exercise_interaction\", \"data\": {\"outcomeType\": 1, \"valueTowardsCompletion\": 1.0, \"interactionType\": 1, \"questionType\": 1, \"questionId\": \"1.1_InvestigateEquality\", \"learnToolsVersion\": \"0.3.5\", \"failureMessage\": \"\", \"exceptionClass\": \"\", \"trace\": \"\"}}, \"*\")"
+      ],
+      "text/plain": [
+       "<IPython.core.display.Javascript object>"
+      ]
+     },
+     "metadata": {},
+     "output_type": "display_data"
+    },
+    {
+     "data": {
+      "text/markdown": [
+       "<span style=\"color:#33cc33\">Correct</span>"
+      ],
+      "text/plain": [
+       "Correct"
+      ]
+     },
+     "metadata": {},
+     "output_type": "display_data"
+    }
+   ],
+   "source": [
+    "# Fill in the line below: How many rows are in the training data?\n",
+    "num_rows = 1168\n",
+    "\n",
+    "# Fill in the line below: How many columns in the training data\n",
+    "# have missing values?\n",
+    "num_cols_with_missing = 3\n",
+    "\n",
+    "# Fill in the line below: How many missing entries are contained in \n",
+    "# all of the training data?\n",
+    "tot_missing = 276\n",
+    "\n",
+    "# Check your answers\n",
+    "step_1.a.check()"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 6,
+   "id": "7175194b",
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2026-04-01T17:37:47.914420Z",
+     "iopub.status.busy": "2026-04-01T17:37:47.913410Z",
+     "iopub.status.idle": "2026-04-01T17:37:47.917479Z",
+     "shell.execute_reply": "2026-04-01T17:37:47.916754Z"
+    },
+    "papermill": {
+     "duration": 0.01191,
+     "end_time": "2026-04-01T17:37:47.919123",
+     "exception": false,
+     "start_time": "2026-04-01T17:37:47.907213",
+     "status": "completed"
+    },
+    "tags": []
+   },
+   "outputs": [],
+   "source": [
+    "# Lines below will give you a hint or solution code\n",
+    "#step_1.a.hint()\n",
+    "#step_1.a.solution()"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "3cd5cca7",
+   "metadata": {
+    "papermill": {
+     "duration": 0.005254,
+     "end_time": "2026-04-01T17:37:47.930174",
+     "exception": false,
+     "start_time": "2026-04-01T17:37:47.924920",
+     "status": "completed"
+    },
+    "tags": []
+   },
+   "source": [
+    "### Part B\n",
+    "Considering your answers above, what do you think is likely the best approach to dealing with the missing values?"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 7,
+   "id": "076949b8",
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2026-04-01T17:37:47.945019Z",
+     "iopub.status.busy": "2026-04-01T17:37:47.944755Z",
+     "iopub.status.idle": "2026-04-01T17:37:47.951876Z",
+     "shell.execute_reply": "2026-04-01T17:37:47.950964Z"
+    },
+    "papermill": {
+     "duration": 0.016727,
+     "end_time": "2026-04-01T17:37:47.953239",
+     "exception": false,
+     "start_time": "2026-04-01T17:37:47.936512",
+     "status": "completed"
+    },
+    "tags": []
+   },
+   "outputs": [
+    {
+     "data": {
+      "application/javascript": [
+       "parent.postMessage({\"jupyterEvent\": \"custom.exercise_interaction\", \"data\": {\"outcomeType\": 1, \"valueTowardsCompletion\": 1.0, \"interactionType\": 1, \"questionType\": 4, \"questionId\": \"1.2_InvestigateThought\", \"learnToolsVersion\": \"0.3.5\", \"failureMessage\": \"\", \"exceptionClass\": \"\", \"trace\": \"\"}}, \"*\")"
+      ],
+      "text/plain": [
+       "<IPython.core.display.Javascript object>"
+      ]
+     },
+     "metadata": {},
+     "output_type": "display_data"
+    },
+    {
+     "data": {
+      "text/markdown": [
+       "<span style=\"color:#33cc33\">Correct:</span> \n",
+       "\n",
+       "Since there are relatively few missing entries in the data (the column with the greatest percentage of missing values is missing less than 20% of its entries), we can expect that dropping columns is unlikely to yield good results.  This is because we'd be throwing away a lot of valuable data, and so imputation will likely perform better."
+      ],
+      "text/plain": [
+       "Correct: \n",
+       "\n",
+       "Since there are relatively few missing entries in the data (the column with the greatest percentage of missing values is missing less than 20% of its entries), we can expect that dropping columns is unlikely to yield good results.  This is because we'd be throwing away a lot of valuable data, and so imputation will likely perform better."
+      ]
+     },
+     "metadata": {},
+     "output_type": "display_data"
+    }
+   ],
+   "source": [
+    "# Check your answer (Run this code cell to receive credit!)\n",
+    "step_1.b.check()"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 8,
+   "id": "bf45ec9e",
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2026-04-01T17:37:47.968107Z",
+     "iopub.status.busy": "2026-04-01T17:37:47.967117Z",
+     "iopub.status.idle": "2026-04-01T17:37:47.971485Z",
+     "shell.execute_reply": "2026-04-01T17:37:47.970523Z"
+    },
+    "papermill": {
+     "duration": 0.013328,
+     "end_time": "2026-04-01T17:37:47.972625",
+     "exception": false,
+     "start_time": "2026-04-01T17:37:47.959297",
+     "status": "completed"
+    },
+    "tags": []
+   },
+   "outputs": [],
+   "source": [
+    "#step_1.b.hint()"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "6a923501",
+   "metadata": {
+    "papermill": {
+     "duration": 0.005033,
+     "end_time": "2026-04-01T17:37:47.983423",
+     "exception": false,
+     "start_time": "2026-04-01T17:37:47.978390",
+     "status": "completed"
+    },
+    "tags": []
+   },
+   "source": [
+    "To compare different approaches to dealing with missing values, you'll use the same `score_dataset()` function from the tutorial.  This function reports the [mean absolute error](https://en.wikipedia.org/wiki/Mean_absolute_error) (MAE) from a random forest model."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 9,
+   "id": "b6f4c99e",
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2026-04-01T17:37:47.996338Z",
+     "iopub.status.busy": "2026-04-01T17:37:47.995282Z",
+     "iopub.status.idle": "2026-04-01T17:37:48.350013Z",
+     "shell.execute_reply": "2026-04-01T17:37:48.349229Z"
+    },
+    "papermill": {
+     "duration": 0.362685,
+     "end_time": "2026-04-01T17:37:48.351497",
+     "exception": false,
+     "start_time": "2026-04-01T17:37:47.988812",
+     "status": "completed"
+    },
+    "tags": []
+   },
+   "outputs": [],
+   "source": [
+    "from sklearn.ensemble import RandomForestRegressor\n",
+    "from sklearn.metrics import mean_absolute_error\n",
+    "\n",
+    "# Function for comparing different approaches\n",
+    "def score_dataset(X_train, X_valid, y_train, y_valid):\n",
+    "    model = RandomForestRegressor(n_estimators=100, random_state=0)\n",
+    "    model.fit(X_train, y_train)\n",
+    "    preds = model.predict(X_valid)\n",
+    "    return mean_absolute_error(y_valid, preds)"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "af20d1e4",
+   "metadata": {
+    "papermill": {
+     "duration": 0.005743,
+     "end_time": "2026-04-01T17:37:48.363209",
+     "exception": false,
+     "start_time": "2026-04-01T17:37:48.357466",
+     "status": "completed"
+    },
+    "tags": []
+   },
+   "source": [
+    "# Step 2: Drop columns with missing values\n",
+    "\n",
+    "In this step, you'll preprocess the data in `X_train` and `X_valid` to remove columns with missing values.  Set the preprocessed DataFrames to `reduced_X_train` and `reduced_X_valid`, respectively.  "
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 10,
+   "id": "5dca5f6a",
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2026-04-01T17:37:48.376044Z",
+     "iopub.status.busy": "2026-04-01T17:37:48.375757Z",
+     "iopub.status.idle": "2026-04-01T17:37:48.396069Z",
+     "shell.execute_reply": "2026-04-01T17:37:48.395360Z"
+    },
+    "papermill": {
+     "duration": 0.028206,
+     "end_time": "2026-04-01T17:37:48.397579",
+     "exception": false,
+     "start_time": "2026-04-01T17:37:48.369373",
+     "status": "completed"
+    },
+    "tags": []
+   },
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "['LotFrontage', 'MasVnrArea', 'GarageYrBlt']\n"
+     ]
+    },
+    {
+     "data": {
+      "application/javascript": [
+       "parent.postMessage({\"jupyterEvent\": \"custom.exercise_interaction\", \"data\": {\"outcomeType\": 1, \"valueTowardsCompletion\": 1.0, \"interactionType\": 1, \"questionType\": 2, \"questionId\": \"2_DropMissing\", \"learnToolsVersion\": \"0.3.5\", \"failureMessage\": \"\", \"exceptionClass\": \"\", \"trace\": \"\"}}, \"*\")"
+      ],
+      "text/plain": [
+       "<IPython.core.display.Javascript object>"
+      ]
+     },
+     "metadata": {},
+     "output_type": "display_data"
+    },
+    {
+     "data": {
+      "text/markdown": [
+       "<span style=\"color:#33cc33\">Correct</span>"
+      ],
+      "text/plain": [
+       "Correct"
+      ]
+     },
+     "metadata": {},
+     "output_type": "display_data"
+    }
+   ],
+   "source": [
+    "# Fill in the line below: get names of columns with missing values\n",
+    "missing = [col for col in X_train.columns if X_train[col].isnull().any()] # Your code here\n",
+    "print(missing)\n",
+    "\n",
+    "# Fill in the lines below: drop columns in training and validation data\n",
+    "reduced_X_train = X_train.drop(missing, axis=1)\n",
+    "reduced_X_valid = X_valid.drop(missing, axis=1)\n",
+    "\n",
+    "# Check your answers\n",
+    "step_2.check()"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 11,
+   "id": "c719136c",
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2026-04-01T17:37:48.413512Z",
+     "iopub.status.busy": "2026-04-01T17:37:48.412427Z",
+     "iopub.status.idle": "2026-04-01T17:37:48.417149Z",
+     "shell.execute_reply": "2026-04-01T17:37:48.415759Z"
+    },
+    "papermill": {
+     "duration": 0.01508,
+     "end_time": "2026-04-01T17:37:48.418988",
+     "exception": false,
+     "start_time": "2026-04-01T17:37:48.403908",
+     "status": "completed"
+    },
+    "tags": []
+   },
+   "outputs": [],
+   "source": [
+    "# Lines below will give you a hint or solution code\n",
+    "# step_2.hint()\n",
+    "# step_2.solution()"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "2491f7bd",
+   "metadata": {
+    "papermill": {
+     "duration": 0.005511,
+     "end_time": "2026-04-01T17:37:48.431458",
+     "exception": false,
+     "start_time": "2026-04-01T17:37:48.425947",
+     "status": "completed"
+    },
+    "tags": []
+   },
+   "source": [
+    "Run the next code cell without changes to obtain the MAE for this approach."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 12,
+   "id": "40ccaf6d",
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2026-04-01T17:37:48.444850Z",
+     "iopub.status.busy": "2026-04-01T17:37:48.444511Z",
+     "iopub.status.idle": "2026-04-01T17:37:49.330017Z",
+     "shell.execute_reply": "2026-04-01T17:37:49.329108Z"
+    },
+    "papermill": {
+     "duration": 0.894125,
+     "end_time": "2026-04-01T17:37:49.331399",
+     "exception": false,
+     "start_time": "2026-04-01T17:37:48.437274",
+     "status": "completed"
+    },
+    "tags": []
+   },
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "MAE (Drop columns with missing values):\n",
+      "17837.82570776256\n"
+     ]
+    }
+   ],
+   "source": [
+    "print(\"MAE (Drop columns with missing values):\")\n",
+    "print(score_dataset(reduced_X_train, reduced_X_valid, y_train, y_valid))"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "9abb6f33",
+   "metadata": {
+    "papermill": {
+     "duration": 0.005989,
+     "end_time": "2026-04-01T17:37:49.346350",
+     "exception": false,
+     "start_time": "2026-04-01T17:37:49.340361",
+     "status": "completed"
+    },
+    "tags": []
+   },
+   "source": [
+    "# Step 3: Imputation\n",
+    "\n",
+    "### Part A\n",
+    "\n",
+    "Use the next code cell to impute missing values with the mean value along each column.  Set the preprocessed DataFrames to `imputed_X_train` and `imputed_X_valid`.  Make sure that the column names match those in `X_train` and `X_valid`."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 13,
+   "id": "d175f4f7",
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2026-04-01T17:37:49.358698Z",
+     "iopub.status.busy": "2026-04-01T17:37:49.358348Z",
+     "iopub.status.idle": "2026-04-01T17:37:49.384902Z",
+     "shell.execute_reply": "2026-04-01T17:37:49.384206Z"
+    },
+    "papermill": {
+     "duration": 0.034414,
+     "end_time": "2026-04-01T17:37:49.386381",
+     "exception": false,
+     "start_time": "2026-04-01T17:37:49.351967",
+     "status": "completed"
+    },
+    "tags": []
+   },
+   "outputs": [
+    {
+     "data": {
+      "application/javascript": [
+       "parent.postMessage({\"jupyterEvent\": \"custom.exercise_interaction\", \"data\": {\"outcomeType\": 1, \"valueTowardsCompletion\": 1.0, \"interactionType\": 1, \"questionType\": 2, \"questionId\": \"3.1_ImputeCode\", \"learnToolsVersion\": \"0.3.5\", \"failureMessage\": \"\", \"exceptionClass\": \"\", \"trace\": \"\"}}, \"*\")"
+      ],
+      "text/plain": [
+       "<IPython.core.display.Javascript object>"
+      ]
+     },
+     "metadata": {},
+     "output_type": "display_data"
+    },
+    {
+     "data": {
+      "text/markdown": [
+       "<span style=\"color:#33cc33\">Correct</span>"
+      ],
+      "text/plain": [
+       "Correct"
+      ]
+     },
+     "metadata": {},
+     "output_type": "display_data"
+    }
+   ],
+   "source": [
+    "from sklearn.impute import SimpleImputer\n",
+    "\n",
+    "# Fill in the lines below: imputation\n",
+    "imputer = SimpleImputer()# Your code here\n",
+    "imputed_X_train = pd.DataFrame(imputer.fit_transform(X_train))\n",
+    "imputed_X_valid = pd.DataFrame(imputer.transform(X_valid))\n",
+    "\n",
+    "# Fill in the lines below: imputation removed column names; put them back\n",
+    "imputed_X_train.columns = X_train.columns\n",
+    "imputed_X_valid.columns = X_valid.columns\n",
+    "\n",
+    "# Check your answers\n",
+    "step_3.a.check()"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 14,
+   "id": "27931d98",
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2026-04-01T17:37:49.399651Z",
+     "iopub.status.busy": "2026-04-01T17:37:49.399293Z",
+     "iopub.status.idle": "2026-04-01T17:37:49.410337Z",
+     "shell.execute_reply": "2026-04-01T17:37:49.409625Z"
+    },
+    "papermill": {
+     "duration": 0.019031,
+     "end_time": "2026-04-01T17:37:49.411816",
+     "exception": false,
+     "start_time": "2026-04-01T17:37:49.392785",
+     "status": "completed"
+    },
+    "tags": []
+   },
+   "outputs": [],
+   "source": [
+    "imputed_X_trains = pd.DataFrame(imputer.fit_transform(X_train))\n",
+    "imputed_X_valids = pd.DataFrame(imputer.transform(X_valid))"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 15,
+   "id": "347cc49a",
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2026-04-01T17:37:49.424950Z",
+     "iopub.status.busy": "2026-04-01T17:37:49.424679Z",
+     "iopub.status.idle": "2026-04-01T17:37:49.442235Z",
+     "shell.execute_reply": "2026-04-01T17:37:49.441510Z"
+    },
+    "papermill": {
+     "duration": 0.025612,
+     "end_time": "2026-04-01T17:37:49.443570",
+     "exception": false,
+     "start_time": "2026-04-01T17:37:49.417958",
+     "status": "completed"
+    },
+    "tags": []
+   },
+   "outputs": [
+    {
+     "data": {
+      "text/html": [
+       "<div>\n",
+       "<style scoped>\n",
+       "    .dataframe tbody tr th:only-of-type {\n",
+       "        vertical-align: middle;\n",
+       "    }\n",
+       "\n",
+       "    .dataframe tbody tr th {\n",
+       "        vertical-align: top;\n",
+       "    }\n",
+       "\n",
+       "    .dataframe thead th {\n",
+       "        text-align: right;\n",
+       "    }\n",
+       "</style>\n",
+       "<table border=\"1\" class=\"dataframe\">\n",
+       "  <thead>\n",
+       "    <tr style=\"text-align: right;\">\n",
+       "      <th></th>\n",
+       "      <th>0</th>\n",
+       "      <th>1</th>\n",
+       "      <th>2</th>\n",
+       "      <th>3</th>\n",
+       "      <th>4</th>\n",
+       "      <th>5</th>\n",
+       "      <th>6</th>\n",
+       "      <th>7</th>\n",
+       "      <th>8</th>\n",
+       "      <th>9</th>\n",
+       "      <th>...</th>\n",
+       "      <th>26</th>\n",
+       "      <th>27</th>\n",
+       "      <th>28</th>\n",
+       "      <th>29</th>\n",
+       "      <th>30</th>\n",
+       "      <th>31</th>\n",
+       "      <th>32</th>\n",
+       "      <th>33</th>\n",
+       "      <th>34</th>\n",
+       "      <th>35</th>\n",
+       "    </tr>\n",
+       "  </thead>\n",
+       "  <tbody>\n",
+       "    <tr>\n",
+       "      <th>0</th>\n",
+       "      <td>20.0</td>\n",
+       "      <td>90.000000</td>\n",
+       "      <td>11694.0</td>\n",
+       "      <td>9.0</td>\n",
+       "      <td>5.0</td>\n",
+       "      <td>2007.0</td>\n",
+       "      <td>2007.0</td>\n",
+       "      <td>452.0</td>\n",
+       "      <td>48.0</td>\n",
+       "      <td>0.0</td>\n",
+       "      <td>...</td>\n",
+       "      <td>774.0</td>\n",
+       "      <td>0.0</td>\n",
+       "      <td>108.0</td>\n",
+       "      <td>0.0</td>\n",
+       "      <td>0.0</td>\n",
+       "      <td>260.0</td>\n",
+       "      <td>0.0</td>\n",
+       "      <td>0.0</td>\n",
+       "      <td>7.0</td>\n",
+       "      <td>2007.0</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>1</th>\n",
+       "      <td>20.0</td>\n",
+       "      <td>60.000000</td>\n",
+       "      <td>6600.0</td>\n",
+       "      <td>5.0</td>\n",
+       "      <td>5.0</td>\n",
+       "      <td>1962.0</td>\n",
+       "      <td>1962.0</td>\n",
+       "      <td>0.0</td>\n",
+       "      <td>0.0</td>\n",
+       "      <td>0.0</td>\n",
+       "      <td>...</td>\n",
+       "      <td>308.0</td>\n",
+       "      <td>0.0</td>\n",
+       "      <td>0.0</td>\n",
+       "      <td>0.0</td>\n",
+       "      <td>0.0</td>\n",
+       "      <td>0.0</td>\n",
+       "      <td>0.0</td>\n",
+       "      <td>0.0</td>\n",
+       "      <td>8.0</td>\n",
+       "      <td>2009.0</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>2</th>\n",
+       "      <td>30.0</td>\n",
+       "      <td>80.000000</td>\n",
+       "      <td>13360.0</td>\n",
+       "      <td>5.0</td>\n",
+       "      <td>7.0</td>\n",
+       "      <td>1921.0</td>\n",
+       "      <td>2006.0</td>\n",
+       "      <td>0.0</td>\n",
+       "      <td>713.0</td>\n",
+       "      <td>0.0</td>\n",
+       "      <td>...</td>\n",
+       "      <td>432.0</td>\n",
+       "      <td>0.0</td>\n",
+       "      <td>0.0</td>\n",
+       "      <td>44.0</td>\n",
+       "      <td>0.0</td>\n",
+       "      <td>0.0</td>\n",
+       "      <td>0.0</td>\n",
+       "      <td>0.0</td>\n",
+       "      <td>8.0</td>\n",
+       "      <td>2009.0</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>3</th>\n",
+       "      <td>20.0</td>\n",
+       "      <td>69.614017</td>\n",
+       "      <td>13265.0</td>\n",
+       "      <td>8.0</td>\n",
+       "      <td>5.0</td>\n",
+       "      <td>2002.0</td>\n",
+       "      <td>2002.0</td>\n",
+       "      <td>148.0</td>\n",
+       "      <td>1218.0</td>\n",
+       "      <td>0.0</td>\n",
+       "      <td>...</td>\n",
+       "      <td>857.0</td>\n",
+       "      <td>150.0</td>\n",
+       "      <td>59.0</td>\n",
+       "      <td>0.0</td>\n",
+       "      <td>0.0</td>\n",
+       "      <td>0.0</td>\n",
+       "      <td>0.0</td>\n",
+       "      <td>0.0</td>\n",
+       "      <td>7.0</td>\n",
+       "      <td>2008.0</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>4</th>\n",
+       "      <td>20.0</td>\n",
+       "      <td>118.000000</td>\n",
+       "      <td>13704.0</td>\n",
+       "      <td>7.0</td>\n",
+       "      <td>5.0</td>\n",
+       "      <td>2001.0</td>\n",
+       "      <td>2002.0</td>\n",
+       "      <td>150.0</td>\n",
+       "      <td>0.0</td>\n",
+       "      <td>0.0</td>\n",
+       "      <td>...</td>\n",
+       "      <td>843.0</td>\n",
+       "      <td>468.0</td>\n",
+       "      <td>81.0</td>\n",
+       "      <td>0.0</td>\n",
+       "      <td>0.0</td>\n",
+       "      <td>0.0</td>\n",
+       "      <td>0.0</td>\n",
+       "      <td>0.0</td>\n",
+       "      <td>1.0</td>\n",
+       "      <td>2006.0</td>\n",
+       "    </tr>\n",
+       "  </tbody>\n",
+       "</table>\n",
+       "<p>5 rows × 36 columns</p>\n",
+       "</div>"
+      ],
+      "text/plain": [
+       "     0           1        2    3    4       5       6      7       8    9   \\\n",
+       "0  20.0   90.000000  11694.0  9.0  5.0  2007.0  2007.0  452.0    48.0  0.0   \n",
+       "1  20.0   60.000000   6600.0  5.0  5.0  1962.0  1962.0    0.0     0.0  0.0   \n",
+       "2  30.0   80.000000  13360.0  5.0  7.0  1921.0  2006.0    0.0   713.0  0.0   \n",
+       "3  20.0   69.614017  13265.0  8.0  5.0  2002.0  2002.0  148.0  1218.0  0.0   \n",
+       "4  20.0  118.000000  13704.0  7.0  5.0  2001.0  2002.0  150.0     0.0  0.0   \n",
+       "\n",
+       "   ...     26     27     28    29   30     31   32   33   34      35  \n",
+       "0  ...  774.0    0.0  108.0   0.0  0.0  260.0  0.0  0.0  7.0  2007.0  \n",
+       "1  ...  308.0    0.0    0.0   0.0  0.0    0.0  0.0  0.0  8.0  2009.0  \n",
+       "2  ...  432.0    0.0    0.0  44.0  0.0    0.0  0.0  0.0  8.0  2009.0  \n",
+       "3  ...  857.0  150.0   59.0   0.0  0.0    0.0  0.0  0.0  7.0  2008.0  \n",
+       "4  ...  843.0  468.0   81.0   0.0  0.0    0.0  0.0  0.0  1.0  2006.0  \n",
+       "\n",
+       "[5 rows x 36 columns]"
+      ]
+     },
+     "execution_count": 15,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "source": [
+    "imputed_X_trains.head()"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 16,
+   "id": "51fa3805",
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2026-04-01T17:37:49.457836Z",
+     "iopub.status.busy": "2026-04-01T17:37:49.457580Z",
+     "iopub.status.idle": "2026-04-01T17:37:49.472170Z",
+     "shell.execute_reply": "2026-04-01T17:37:49.471147Z"
+    },
+    "papermill": {
+     "duration": 0.022529,
+     "end_time": "2026-04-01T17:37:49.473276",
+     "exception": false,
+     "start_time": "2026-04-01T17:37:49.450747",
+     "status": "completed"
+    },
+    "tags": []
+   },
+   "outputs": [
+    {
+     "name": "stderr",
+     "output_type": "stream",
+     "text": [
+      "/usr/local/lib/python3.11/dist-packages/pandas/io/formats/format.py:1458: RuntimeWarning: invalid value encountered in greater\n",
+      "  has_large_values = (abs_vals > 1e6).any()\n",
+      "/usr/local/lib/python3.11/dist-packages/pandas/io/formats/format.py:1459: RuntimeWarning: invalid value encountered in less\n",
+      "  has_small_values = ((abs_vals < 10 ** (-self.digits)) & (abs_vals > 0)).any()\n",
+      "/usr/local/lib/python3.11/dist-packages/pandas/io/formats/format.py:1459: RuntimeWarning: invalid value encountered in greater\n",
+      "  has_small_values = ((abs_vals < 10 ** (-self.digits)) & (abs_vals > 0)).any()\n",
+      "/usr/local/lib/python3.11/dist-packages/pandas/io/formats/format.py:1458: RuntimeWarning: invalid value encountered in greater\n",
+      "  has_large_values = (abs_vals > 1e6).any()\n",
+      "/usr/local/lib/python3.11/dist-packages/pandas/io/formats/format.py:1459: RuntimeWarning: invalid value encountered in less\n",
+      "  has_small_values = ((abs_vals < 10 ** (-self.digits)) & (abs_vals > 0)).any()\n",
+      "/usr/local/lib/python3.11/dist-packages/pandas/io/formats/format.py:1459: RuntimeWarning: invalid value encountered in greater\n",
+      "  has_small_values = ((abs_vals < 10 ** (-self.digits)) & (abs_vals > 0)).any()\n"
+     ]
+    },
+    {
+     "data": {
+      "text/html": [
+       "<div>\n",
+       "<style scoped>\n",
+       "    .dataframe tbody tr th:only-of-type {\n",
+       "        vertical-align: middle;\n",
+       "    }\n",
+       "\n",
+       "    .dataframe tbody tr th {\n",
+       "        vertical-align: top;\n",
+       "    }\n",
+       "\n",
+       "    .dataframe thead th {\n",
+       "        text-align: right;\n",
+       "    }\n",
+       "</style>\n",
+       "<table border=\"1\" class=\"dataframe\">\n",
+       "  <thead>\n",
+       "    <tr style=\"text-align: right;\">\n",
+       "      <th></th>\n",
+       "      <th>MSSubClass</th>\n",
+       "      <th>LotFrontage</th>\n",
+       "      <th>LotArea</th>\n",
+       "      <th>OverallQual</th>\n",
+       "      <th>OverallCond</th>\n",
+       "      <th>YearBuilt</th>\n",
+       "      <th>YearRemodAdd</th>\n",
+       "      <th>MasVnrArea</th>\n",
+       "      <th>BsmtFinSF1</th>\n",
+       "      <th>BsmtFinSF2</th>\n",
+       "      <th>...</th>\n",
+       "      <th>GarageArea</th>\n",
+       "      <th>WoodDeckSF</th>\n",
+       "      <th>OpenPorchSF</th>\n",
+       "      <th>EnclosedPorch</th>\n",
+       "      <th>3SsnPorch</th>\n",
+       "      <th>ScreenPorch</th>\n",
+       "      <th>PoolArea</th>\n",
+       "      <th>MiscVal</th>\n",
+       "      <th>MoSold</th>\n",
+       "      <th>YrSold</th>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>Id</th>\n",
+       "      <th></th>\n",
+       "      <th></th>\n",
+       "      <th></th>\n",
+       "      <th></th>\n",
+       "      <th></th>\n",
+       "      <th></th>\n",
+       "      <th></th>\n",
+       "      <th></th>\n",
+       "      <th></th>\n",
+       "      <th></th>\n",
+       "      <th></th>\n",
+       "      <th></th>\n",
+       "      <th></th>\n",
+       "      <th></th>\n",
+       "      <th></th>\n",
+       "      <th></th>\n",
+       "      <th></th>\n",
+       "      <th></th>\n",
+       "      <th></th>\n",
+       "      <th></th>\n",
+       "      <th></th>\n",
+       "    </tr>\n",
+       "  </thead>\n",
+       "  <tbody>\n",
+       "    <tr>\n",
+       "      <th>619</th>\n",
+       "      <td>20</td>\n",
+       "      <td>90.0</td>\n",
+       "      <td>11694</td>\n",
+       "      <td>9</td>\n",
+       "      <td>5</td>\n",
+       "      <td>2007</td>\n",
+       "      <td>2007</td>\n",
+       "      <td>452.0</td>\n",
+       "      <td>48</td>\n",
+       "      <td>0</td>\n",
+       "      <td>...</td>\n",
+       "      <td>774</td>\n",
+       "      <td>0</td>\n",
+       "      <td>108</td>\n",
+       "      <td>0</td>\n",
+       "      <td>0</td>\n",
+       "      <td>260</td>\n",
+       "      <td>0</td>\n",
+       "      <td>0</td>\n",
+       "      <td>7</td>\n",
+       "      <td>2007</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>871</th>\n",
+       "      <td>20</td>\n",
+       "      <td>60.0</td>\n",
+       "      <td>6600</td>\n",
+       "      <td>5</td>\n",
+       "      <td>5</td>\n",
+       "      <td>1962</td>\n",
+       "      <td>1962</td>\n",
+       "      <td>0.0</td>\n",
+       "      <td>0</td>\n",
+       "      <td>0</td>\n",
+       "      <td>...</td>\n",
+       "      <td>308</td>\n",
+       "      <td>0</td>\n",
+       "      <td>0</td>\n",
+       "      <td>0</td>\n",
+       "      <td>0</td>\n",
+       "      <td>0</td>\n",
+       "      <td>0</td>\n",
+       "      <td>0</td>\n",
+       "      <td>8</td>\n",
+       "      <td>2009</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>93</th>\n",
+       "      <td>30</td>\n",
+       "      <td>80.0</td>\n",
+       "      <td>13360</td>\n",
+       "      <td>5</td>\n",
+       "      <td>7</td>\n",
+       "      <td>1921</td>\n",
+       "      <td>2006</td>\n",
+       "      <td>0.0</td>\n",
+       "      <td>713</td>\n",
+       "      <td>0</td>\n",
+       "      <td>...</td>\n",
+       "      <td>432</td>\n",
+       "      <td>0</td>\n",
+       "      <td>0</td>\n",
+       "      <td>44</td>\n",
+       "      <td>0</td>\n",
+       "      <td>0</td>\n",
+       "      <td>0</td>\n",
+       "      <td>0</td>\n",
+       "      <td>8</td>\n",
+       "      <td>2009</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>818</th>\n",
+       "      <td>20</td>\n",
+       "      <td>NaN</td>\n",
+       "      <td>13265</td>\n",
+       "      <td>8</td>\n",
+       "      <td>5</td>\n",
+       "      <td>2002</td>\n",
+       "      <td>2002</td>\n",
+       "      <td>148.0</td>\n",
+       "      <td>1218</td>\n",
+       "      <td>0</td>\n",
+       "      <td>...</td>\n",
+       "      <td>857</td>\n",
+       "      <td>150</td>\n",
+       "      <td>59</td>\n",
+       "      <td>0</td>\n",
+       "      <td>0</td>\n",
+       "      <td>0</td>\n",
+       "      <td>0</td>\n",
+       "      <td>0</td>\n",
+       "      <td>7</td>\n",
+       "      <td>2008</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>303</th>\n",
+       "      <td>20</td>\n",
+       "      <td>118.0</td>\n",
+       "      <td>13704</td>\n",
+       "      <td>7</td>\n",
+       "      <td>5</td>\n",
+       "      <td>2001</td>\n",
+       "      <td>2002</td>\n",
+       "      <td>150.0</td>\n",
+       "      <td>0</td>\n",
+       "      <td>0</td>\n",
+       "      <td>...</td>\n",
+       "      <td>843</td>\n",
+       "      <td>468</td>\n",
+       "      <td>81</td>\n",
+       "      <td>0</td>\n",
+       "      <td>0</td>\n",
+       "      <td>0</td>\n",
+       "      <td>0</td>\n",
+       "      <td>0</td>\n",
+       "      <td>1</td>\n",
+       "      <td>2006</td>\n",
+       "    </tr>\n",
+       "  </tbody>\n",
+       "</table>\n",
+       "<p>5 rows × 36 columns</p>\n",
+       "</div>"
+      ],
+      "text/plain": [
+       "     MSSubClass  LotFrontage  LotArea  OverallQual  OverallCond  YearBuilt  \\\n",
+       "Id                                                                           \n",
+       "619          20         90.0    11694            9            5       2007   \n",
+       "871          20         60.0     6600            5            5       1962   \n",
+       "93           30         80.0    13360            5            7       1921   \n",
+       "818          20          NaN    13265            8            5       2002   \n",
+       "303          20        118.0    13704            7            5       2001   \n",
+       "\n",
+       "     YearRemodAdd  MasVnrArea  BsmtFinSF1  BsmtFinSF2  ...  GarageArea  \\\n",
+       "Id                                                     ...               \n",
+       "619          2007       452.0          48           0  ...         774   \n",
+       "871          1962         0.0           0           0  ...         308   \n",
+       "93           2006         0.0         713           0  ...         432   \n",
+       "818          2002       148.0        1218           0  ...         857   \n",
+       "303          2002       150.0           0           0  ...         843   \n",
+       "\n",
+       "     WoodDeckSF  OpenPorchSF  EnclosedPorch  3SsnPorch  ScreenPorch  PoolArea  \\\n",
+       "Id                                                                              \n",
+       "619           0          108              0          0          260         0   \n",
+       "871           0            0              0          0            0         0   \n",
+       "93            0            0             44          0            0         0   \n",
+       "818         150           59              0          0            0         0   \n",
+       "303         468           81              0          0            0         0   \n",
+       "\n",
+       "     MiscVal  MoSold  YrSold  \n",
+       "Id                            \n",
+       "619        0       7    2007  \n",
+       "871        0       8    2009  \n",
+       "93         0       8    2009  \n",
+       "818        0       7    2008  \n",
+       "303        0       1    2006  \n",
+       "\n",
+       "[5 rows x 36 columns]"
+      ]
+     },
+     "execution_count": 16,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "source": [
+    "X_train.head()"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 17,
+   "id": "e734c9b6",
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2026-04-01T17:37:49.489131Z",
+     "iopub.status.busy": "2026-04-01T17:37:49.488896Z",
+     "iopub.status.idle": "2026-04-01T17:37:49.494719Z",
+     "shell.execute_reply": "2026-04-01T17:37:49.493822Z"
+    },
+    "papermill": {
+     "duration": 0.015381,
+     "end_time": "2026-04-01T17:37:49.496039",
+     "exception": false,
+     "start_time": "2026-04-01T17:37:49.480658",
+     "status": "completed"
+    },
+    "tags": []
+   },
+   "outputs": [
+    {
+     "data": {
+      "application/javascript": [
+       "parent.postMessage({\"jupyterEvent\": \"custom.exercise_interaction\", \"data\": {\"interactionType\": 2, \"questionType\": 2, \"questionId\": \"3.1_ImputeCode\", \"learnToolsVersion\": \"0.3.5\", \"valueTowardsCompletion\": 0.0, \"failureMessage\": \"\", \"exceptionClass\": \"\", \"trace\": \"\", \"outcomeType\": 4}}, \"*\")"
+      ],
+      "text/plain": [
+       "<IPython.core.display.Javascript object>"
+      ]
+     },
+     "metadata": {},
+     "output_type": "display_data"
+    },
+    {
+     "data": {
+      "text/markdown": [
+       "<span style=\"color:#3366cc\">Hint:</span> Begin by defining an instance of the `SimpleImputer()` class.  Then, use the imputer to fit and transform the training data, before transforming the validation data. Get the original column names from the original DataFrames `X_train` and `X_valid`."
+      ],
+      "text/plain": [
+       "Hint: Begin by defining an instance of the `SimpleImputer()` class.  Then, use the imputer to fit and transform the training data, before transforming the validation data. Get the original column names from the original DataFrames `X_train` and `X_valid`."
+      ]
+     },
+     "metadata": {},
+     "output_type": "display_data"
+    }
+   ],
+   "source": [
+    "# Lines below will give you a hint or solution code\n",
+    "step_3.a.hint()\n",
+    "# step_3.a.solution()"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "0a072648",
+   "metadata": {
+    "papermill": {
+     "duration": 0.006356,
+     "end_time": "2026-04-01T17:37:49.509138",
+     "exception": false,
+     "start_time": "2026-04-01T17:37:49.502782",
+     "status": "completed"
+    },
+    "tags": []
+   },
+   "source": [
+    "Run the next code cell without changes to obtain the MAE for this approach."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 18,
+   "id": "d97b6f4b",
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2026-04-01T17:37:49.523561Z",
+     "iopub.status.busy": "2026-04-01T17:37:49.523269Z",
+     "iopub.status.idle": "2026-04-01T17:37:50.508893Z",
+     "shell.execute_reply": "2026-04-01T17:37:50.507402Z"
+    },
+    "papermill": {
+     "duration": 0.994071,
+     "end_time": "2026-04-01T17:37:50.510294",
+     "exception": false,
+     "start_time": "2026-04-01T17:37:49.516223",
+     "status": "completed"
+    },
+    "tags": []
+   },
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "MAE (Imputation):\n",
+      "18062.894611872147\n"
+     ]
+    }
+   ],
+   "source": [
+    "print(\"MAE (Imputation):\")\n",
+    "print(score_dataset(imputed_X_train, imputed_X_valid, y_train, y_valid))"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "0842e945",
+   "metadata": {
+    "papermill": {
+     "duration": 0.006195,
+     "end_time": "2026-04-01T17:37:50.524045",
+     "exception": false,
+     "start_time": "2026-04-01T17:37:50.517850",
+     "status": "completed"
+    },
+    "tags": []
+   },
+   "source": [
+    "### Part B\n",
+    "\n",
+    "Compare the MAE from each approach.  Does anything surprise you about the results?  Why do you think one approach performed better than the other?"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 19,
+   "id": "a5ed32db",
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2026-04-01T17:37:50.539490Z",
+     "iopub.status.busy": "2026-04-01T17:37:50.538252Z",
+     "iopub.status.idle": "2026-04-01T17:37:50.546195Z",
+     "shell.execute_reply": "2026-04-01T17:37:50.545172Z"
+    },
+    "papermill": {
+     "duration": 0.016925,
+     "end_time": "2026-04-01T17:37:50.547618",
+     "exception": false,
+     "start_time": "2026-04-01T17:37:50.530693",
+     "status": "completed"
+    },
+    "tags": []
+   },
+   "outputs": [
+    {
+     "data": {
+      "application/javascript": [
+       "parent.postMessage({\"jupyterEvent\": \"custom.exercise_interaction\", \"data\": {\"outcomeType\": 1, \"valueTowardsCompletion\": 1.0, \"interactionType\": 1, \"questionType\": 4, \"questionId\": \"3.2_ImputeThought\", \"learnToolsVersion\": \"0.3.5\", \"failureMessage\": \"\", \"exceptionClass\": \"\", \"trace\": \"\"}}, \"*\")"
+      ],
+      "text/plain": [
+       "<IPython.core.display.Javascript object>"
+      ]
+     },
+     "metadata": {},
+     "output_type": "display_data"
+    },
+    {
+     "data": {
+      "text/markdown": [
+       "<span style=\"color:#33cc33\">Correct:</span> \n",
+       "\n",
+       "Given that thre are so few missing values in the dataset, we'd expect imputation to perform better than dropping columns entirely.  However, we see that dropping columns performs slightly better!  While this can probably partially be attributed to noise in the dataset, another potential explanation is that the imputation method is not a great match to this dataset.  That is, maybe instead of filling in the mean value, it makes more sense to set every missing value to a value of 0, to fill in the most frequently encountered value, or to use some other method.  For instance, consider the `GarageYrBlt` column (which indicates the year that the garage was built).  It's likely that in some cases, a missing value could indicate a house that does not have a garage.  Does it make more sense to fill in the median value along each column in this case?  Or could we get better results by filling in the minimum value along each column?  It's not quite clear what's best in this case, but perhaps we can rule out some options immediately - for instance, setting missing values in this column to 0 is likely to yield horrible results!"
+      ],
+      "text/plain": [
+       "Correct: \n",
+       "\n",
+       "Given that thre are so few missing values in the dataset, we'd expect imputation to perform better than dropping columns entirely.  However, we see that dropping columns performs slightly better!  While this can probably partially be attributed to noise in the dataset, another potential explanation is that the imputation method is not a great match to this dataset.  That is, maybe instead of filling in the mean value, it makes more sense to set every missing value to a value of 0, to fill in the most frequently encountered value, or to use some other method.  For instance, consider the `GarageYrBlt` column (which indicates the year that the garage was built).  It's likely that in some cases, a missing value could indicate a house that does not have a garage.  Does it make more sense to fill in the median value along each column in this case?  Or could we get better results by filling in the minimum value along each column?  It's not quite clear what's best in this case, but perhaps we can rule out some options immediately - for instance, setting missing values in this column to 0 is likely to yield horrible results!"
+      ]
+     },
+     "metadata": {},
+     "output_type": "display_data"
+    }
+   ],
+   "source": [
+    "# Check your answer (Run this code cell to receive credit!)\n",
+    "step_3.b.check()"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 20,
+   "id": "e7e4109f",
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2026-04-01T17:37:50.563876Z",
+     "iopub.status.busy": "2026-04-01T17:37:50.563523Z",
+     "iopub.status.idle": "2026-04-01T17:37:50.567417Z",
+     "shell.execute_reply": "2026-04-01T17:37:50.566413Z"
+    },
+    "papermill": {
+     "duration": 0.013996,
+     "end_time": "2026-04-01T17:37:50.568702",
+     "exception": false,
+     "start_time": "2026-04-01T17:37:50.554706",
+     "status": "completed"
+    },
+    "tags": []
+   },
+   "outputs": [],
+   "source": [
+    "#step_3.b.hint()"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "3a19196c",
+   "metadata": {
+    "papermill": {
+     "duration": 0.00602,
+     "end_time": "2026-04-01T17:37:50.581362",
+     "exception": false,
+     "start_time": "2026-04-01T17:37:50.575342",
+     "status": "completed"
+    },
+    "tags": []
+   },
+   "source": [
+    "# Step 4: Generate test predictions\n",
+    "\n",
+    "In this final step, you'll use any approach of your choosing to deal with missing values.  Once you've preprocessed the training and validation features, you'll train and evaluate a random forest model.  Then, you'll preprocess the test data before generating predictions that can be submitted to the competition!\n",
+    "\n",
+    "### Part A\n",
+    "\n",
+    "Use the next code cell to preprocess the training and validation data.  Set the preprocessed DataFrames to `final_X_train` and `final_X_valid`.  **You can use any approach of your choosing here!**  in order for this step to be marked as correct, you need only ensure:\n",
+    "- the preprocessed DataFrames have the same number of columns,\n",
+    "- the preprocessed DataFrames have no missing values, \n",
+    "- `final_X_train` and `y_train` have the same number of rows, and\n",
+    "- `final_X_valid` and `y_valid` have the same number of rows."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 21,
+   "id": "1ab49d04",
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2026-04-01T17:37:50.594786Z",
+     "iopub.status.busy": "2026-04-01T17:37:50.594521Z",
+     "iopub.status.idle": "2026-04-01T17:37:50.613856Z",
+     "shell.execute_reply": "2026-04-01T17:37:50.613029Z"
+    },
+    "papermill": {
+     "duration": 0.027759,
+     "end_time": "2026-04-01T17:37:50.615254",
+     "exception": false,
+     "start_time": "2026-04-01T17:37:50.587495",
+     "status": "completed"
+    },
+    "tags": []
+   },
+   "outputs": [
+    {
+     "data": {
+      "application/javascript": [
+       "parent.postMessage({\"jupyterEvent\": \"custom.exercise_interaction\", \"data\": {\"outcomeType\": 1, \"valueTowardsCompletion\": 1.0, \"interactionType\": 1, \"questionType\": 2, \"questionId\": \"4.1_PredsCodeA\", \"learnToolsVersion\": \"0.3.5\", \"failureMessage\": \"\", \"exceptionClass\": \"\", \"trace\": \"\"}}, \"*\")"
+      ],
+      "text/plain": [
+       "<IPython.core.display.Javascript object>"
+      ]
+     },
+     "metadata": {},
+     "output_type": "display_data"
+    },
+    {
+     "data": {
+      "text/markdown": [
+       "<span style=\"color:#33cc33\">Correct</span>"
+      ],
+      "text/plain": [
+       "Correct"
+      ]
+     },
+     "metadata": {},
+     "output_type": "display_data"
+    }
+   ],
+   "source": [
+    "# Preprocessed training and validation features\n",
+    "median_imputer = SimpleImputer(strategy='median')\n",
+    "final_X_train = pd.DataFrame(median_imputer.fit_transform(X_train))\n",
+    "final_X_valid = pd.DataFrame(median_imputer.transform(X_valid))\n",
+    "\n",
+    "final_X_train.columns = X_train.columns \n",
+    "final_X_valid.columns = X_valid.columns\n",
+    "# Check your answers\n",
+    "step_4.a.check()"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 22,
+   "id": "f87e14f8",
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2026-04-01T17:37:50.632219Z",
+     "iopub.status.busy": "2026-04-01T17:37:50.631450Z",
+     "iopub.status.idle": "2026-04-01T17:37:50.650312Z",
+     "shell.execute_reply": "2026-04-01T17:37:50.649598Z"
+    },
+    "papermill": {
+     "duration": 0.028076,
+     "end_time": "2026-04-01T17:37:50.651291",
+     "exception": false,
+     "start_time": "2026-04-01T17:37:50.623215",
+     "status": "completed"
+    },
+    "tags": []
+   },
+   "outputs": [
+    {
+     "data": {
+      "text/html": [
+       "<div>\n",
+       "<style scoped>\n",
+       "    .dataframe tbody tr th:only-of-type {\n",
+       "        vertical-align: middle;\n",
+       "    }\n",
+       "\n",
+       "    .dataframe tbody tr th {\n",
+       "        vertical-align: top;\n",
+       "    }\n",
+       "\n",
+       "    .dataframe thead th {\n",
+       "        text-align: right;\n",
+       "    }\n",
+       "</style>\n",
+       "<table border=\"1\" class=\"dataframe\">\n",
+       "  <thead>\n",
+       "    <tr style=\"text-align: right;\">\n",
+       "      <th></th>\n",
+       "      <th>MSSubClass</th>\n",
+       "      <th>LotFrontage</th>\n",
+       "      <th>LotArea</th>\n",
+       "      <th>OverallQual</th>\n",
+       "      <th>OverallCond</th>\n",
+       "      <th>YearBuilt</th>\n",
+       "      <th>YearRemodAdd</th>\n",
+       "      <th>MasVnrArea</th>\n",
+       "      <th>BsmtFinSF1</th>\n",
+       "      <th>BsmtFinSF2</th>\n",
+       "      <th>...</th>\n",
+       "      <th>GarageArea</th>\n",
+       "      <th>WoodDeckSF</th>\n",
+       "      <th>OpenPorchSF</th>\n",
+       "      <th>EnclosedPorch</th>\n",
+       "      <th>3SsnPorch</th>\n",
+       "      <th>ScreenPorch</th>\n",
+       "      <th>PoolArea</th>\n",
+       "      <th>MiscVal</th>\n",
+       "      <th>MoSold</th>\n",
+       "      <th>YrSold</th>\n",
+       "    </tr>\n",
+       "  </thead>\n",
+       "  <tbody>\n",
+       "    <tr>\n",
+       "      <th>0</th>\n",
+       "      <td>20.0</td>\n",
+       "      <td>90.0</td>\n",
+       "      <td>11694.0</td>\n",
+       "      <td>9.0</td>\n",
+       "      <td>5.0</td>\n",
+       "      <td>2007.0</td>\n",
+       "      <td>2007.0</td>\n",
+       "      <td>452.0</td>\n",
+       "      <td>48.0</td>\n",
+       "      <td>0.0</td>\n",
+       "      <td>...</td>\n",
+       "      <td>774.0</td>\n",
+       "      <td>0.0</td>\n",
+       "      <td>108.0</td>\n",
+       "      <td>0.0</td>\n",
+       "      <td>0.0</td>\n",
+       "      <td>260.0</td>\n",
+       "      <td>0.0</td>\n",
+       "      <td>0.0</td>\n",
+       "      <td>7.0</td>\n",
+       "      <td>2007.0</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>1</th>\n",
+       "      <td>20.0</td>\n",
+       "      <td>60.0</td>\n",
+       "      <td>6600.0</td>\n",
+       "      <td>5.0</td>\n",
+       "      <td>5.0</td>\n",
+       "      <td>1962.0</td>\n",
+       "      <td>1962.0</td>\n",
+       "      <td>0.0</td>\n",
+       "      <td>0.0</td>\n",
+       "      <td>0.0</td>\n",
+       "      <td>...</td>\n",
+       "      <td>308.0</td>\n",
+       "      <td>0.0</td>\n",
+       "      <td>0.0</td>\n",
+       "      <td>0.0</td>\n",
+       "      <td>0.0</td>\n",
+       "      <td>0.0</td>\n",
+       "      <td>0.0</td>\n",
+       "      <td>0.0</td>\n",
+       "      <td>8.0</td>\n",
+       "      <td>2009.0</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>2</th>\n",
+       "      <td>30.0</td>\n",
+       "      <td>80.0</td>\n",
+       "      <td>13360.0</td>\n",
+       "      <td>5.0</td>\n",
+       "      <td>7.0</td>\n",
+       "      <td>1921.0</td>\n",
+       "      <td>2006.0</td>\n",
+       "      <td>0.0</td>\n",
+       "      <td>713.0</td>\n",
+       "      <td>0.0</td>\n",
+       "      <td>...</td>\n",
+       "      <td>432.0</td>\n",
+       "      <td>0.0</td>\n",
+       "      <td>0.0</td>\n",
+       "      <td>44.0</td>\n",
+       "      <td>0.0</td>\n",
+       "      <td>0.0</td>\n",
+       "      <td>0.0</td>\n",
+       "      <td>0.0</td>\n",
+       "      <td>8.0</td>\n",
+       "      <td>2009.0</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>3</th>\n",
+       "      <td>20.0</td>\n",
+       "      <td>69.0</td>\n",
+       "      <td>13265.0</td>\n",
+       "      <td>8.0</td>\n",
+       "      <td>5.0</td>\n",
+       "      <td>2002.0</td>\n",
+       "      <td>2002.0</td>\n",
+       "      <td>148.0</td>\n",
+       "      <td>1218.0</td>\n",
+       "      <td>0.0</td>\n",
+       "      <td>...</td>\n",
+       "      <td>857.0</td>\n",
+       "      <td>150.0</td>\n",
+       "      <td>59.0</td>\n",
+       "      <td>0.0</td>\n",
+       "      <td>0.0</td>\n",
+       "      <td>0.0</td>\n",
+       "      <td>0.0</td>\n",
+       "      <td>0.0</td>\n",
+       "      <td>7.0</td>\n",
+       "      <td>2008.0</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>4</th>\n",
+       "      <td>20.0</td>\n",
+       "      <td>118.0</td>\n",
+       "      <td>13704.0</td>\n",
+       "      <td>7.0</td>\n",
+       "      <td>5.0</td>\n",
+       "      <td>2001.0</td>\n",
+       "      <td>2002.0</td>\n",
+       "      <td>150.0</td>\n",
+       "      <td>0.0</td>\n",
+       "      <td>0.0</td>\n",
+       "      <td>...</td>\n",
+       "      <td>843.0</td>\n",
+       "      <td>468.0</td>\n",
+       "      <td>81.0</td>\n",
+       "      <td>0.0</td>\n",
+       "      <td>0.0</td>\n",
+       "      <td>0.0</td>\n",
+       "      <td>0.0</td>\n",
+       "      <td>0.0</td>\n",
+       "      <td>1.0</td>\n",
+       "      <td>2006.0</td>\n",
+       "    </tr>\n",
+       "  </tbody>\n",
+       "</table>\n",
+       "<p>5 rows × 36 columns</p>\n",
+       "</div>"
+      ],
+      "text/plain": [
+       "   MSSubClass  LotFrontage  LotArea  OverallQual  OverallCond  YearBuilt  \\\n",
+       "0        20.0         90.0  11694.0          9.0          5.0     2007.0   \n",
+       "1        20.0         60.0   6600.0          5.0          5.0     1962.0   \n",
+       "2        30.0         80.0  13360.0          5.0          7.0     1921.0   \n",
+       "3        20.0         69.0  13265.0          8.0          5.0     2002.0   \n",
+       "4        20.0        118.0  13704.0          7.0          5.0     2001.0   \n",
+       "\n",
+       "   YearRemodAdd  MasVnrArea  BsmtFinSF1  BsmtFinSF2  ...  GarageArea  \\\n",
+       "0        2007.0       452.0        48.0         0.0  ...       774.0   \n",
+       "1        1962.0         0.0         0.0         0.0  ...       308.0   \n",
+       "2        2006.0         0.0       713.0         0.0  ...       432.0   \n",
+       "3        2002.0       148.0      1218.0         0.0  ...       857.0   \n",
+       "4        2002.0       150.0         0.0         0.0  ...       843.0   \n",
+       "\n",
+       "   WoodDeckSF  OpenPorchSF  EnclosedPorch  3SsnPorch  ScreenPorch  PoolArea  \\\n",
+       "0         0.0        108.0            0.0        0.0        260.0       0.0   \n",
+       "1         0.0          0.0            0.0        0.0          0.0       0.0   \n",
+       "2         0.0          0.0           44.0        0.0          0.0       0.0   \n",
+       "3       150.0         59.0            0.0        0.0          0.0       0.0   \n",
+       "4       468.0         81.0            0.0        0.0          0.0       0.0   \n",
+       "\n",
+       "   MiscVal  MoSold  YrSold  \n",
+       "0      0.0     7.0  2007.0  \n",
+       "1      0.0     8.0  2009.0  \n",
+       "2      0.0     8.0  2009.0  \n",
+       "3      0.0     7.0  2008.0  \n",
+       "4      0.0     1.0  2006.0  \n",
+       "\n",
+       "[5 rows x 36 columns]"
+      ]
+     },
+     "execution_count": 22,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "source": [
+    "final_X_train.head()"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 23,
+   "id": "f68249b7",
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2026-04-01T17:37:50.666318Z",
+     "iopub.status.busy": "2026-04-01T17:37:50.666039Z",
+     "iopub.status.idle": "2026-04-01T17:37:50.670035Z",
+     "shell.execute_reply": "2026-04-01T17:37:50.668789Z"
+    },
+    "papermill": {
+     "duration": 0.013096,
+     "end_time": "2026-04-01T17:37:50.671517",
+     "exception": false,
+     "start_time": "2026-04-01T17:37:50.658421",
+     "status": "completed"
+    },
+    "tags": []
+   },
+   "outputs": [],
+   "source": [
+    "# Lines below will give you a hint or solution code\n",
+    "# step_4.a.hint()\n",
+    "# step_4.a.solution()"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "ad6967a6",
+   "metadata": {
+    "papermill": {
+     "duration": 0.006868,
+     "end_time": "2026-04-01T17:37:50.685878",
+     "exception": false,
+     "start_time": "2026-04-01T17:37:50.679010",
+     "status": "completed"
+    },
+    "tags": []
+   },
+   "source": [
+    "Run the next code cell to train and evaluate a random forest model.  (*Note that we don't use the `score_dataset()` function above, because we will soon use the trained model to generate test predictions!*)"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 24,
+   "id": "70337ac7",
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2026-04-01T17:37:50.700950Z",
+     "iopub.status.busy": "2026-04-01T17:37:50.700682Z",
+     "iopub.status.idle": "2026-04-01T17:37:51.672937Z",
+     "shell.execute_reply": "2026-04-01T17:37:51.672195Z"
+    },
+    "papermill": {
+     "duration": 0.981148,
+     "end_time": "2026-04-01T17:37:51.673903",
+     "exception": false,
+     "start_time": "2026-04-01T17:37:50.692755",
+     "status": "completed"
+    },
+    "tags": []
+   },
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "MAE (Your approach):\n",
+      "17791.59899543379\n"
+     ]
+    }
+   ],
+   "source": [
+    "# Define and fit model\n",
+    "model = RandomForestRegressor(n_estimators=100, random_state=0)\n",
+    "model.fit(final_X_train, y_train)\n",
+    "\n",
+    "# Get validation predictions and MAE\n",
+    "preds_valid = model.predict(final_X_valid)\n",
+    "print(\"MAE (Your approach):\")\n",
+    "print(mean_absolute_error(y_valid, preds_valid))"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "f01b1730",
+   "metadata": {
+    "papermill": {
+     "duration": 0.006647,
+     "end_time": "2026-04-01T17:37:51.687809",
+     "exception": false,
+     "start_time": "2026-04-01T17:37:51.681162",
+     "status": "completed"
+    },
+    "tags": []
+   },
+   "source": [
+    "### Part B\n",
+    "\n",
+    "Use the next code cell to preprocess your test data.  Make sure that you use a method that agrees with how you preprocessed the training and validation data, and set the preprocessed test features to `final_X_test`.\n",
+    "\n",
+    "Then, use the preprocessed test features and the trained model to generate test predictions in `preds_test`.\n",
+    "\n",
+    "In order for this step to be marked correct, you need only ensure:\n",
+    "- the preprocessed test DataFrame has no missing values, and\n",
+    "- `final_X_test` has the same number of rows as `X_test`."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 25,
+   "id": "634d6b6a",
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2026-04-01T17:37:51.702930Z",
+     "iopub.status.busy": "2026-04-01T17:37:51.702665Z",
+     "iopub.status.idle": "2026-04-01T17:37:51.735628Z",
+     "shell.execute_reply": "2026-04-01T17:37:51.734869Z"
+    },
+    "papermill": {
+     "duration": 0.042252,
+     "end_time": "2026-04-01T17:37:51.737009",
+     "exception": false,
+     "start_time": "2026-04-01T17:37:51.694757",
+     "status": "completed"
+    },
+    "tags": []
+   },
+   "outputs": [
+    {
+     "data": {
+      "application/javascript": [
+       "parent.postMessage({\"jupyterEvent\": \"custom.exercise_interaction\", \"data\": {\"outcomeType\": 1, \"valueTowardsCompletion\": 1.0, \"interactionType\": 1, \"questionType\": 2, \"questionId\": \"4.2_PredsCodeB\", \"learnToolsVersion\": \"0.3.5\", \"failureMessage\": \"\", \"exceptionClass\": \"\", \"trace\": \"\"}}, \"*\")"
+      ],
+      "text/plain": [
+       "<IPython.core.display.Javascript object>"
+      ]
+     },
+     "metadata": {},
+     "output_type": "display_data"
+    },
+    {
+     "data": {
+      "text/markdown": [
+       "<span style=\"color:#33cc33\">Correct</span>"
+      ],
+      "text/plain": [
+       "Correct"
+      ]
+     },
+     "metadata": {},
+     "output_type": "display_data"
+    }
+   ],
+   "source": [
+    "# Fill in the line below: preprocess test data\n",
+    "final_X_test = pd.DataFrame(median_imputer.transform(X_test))\n",
+    "final_X_test.columns = X_test.columns\n",
+    "\n",
+    "# Fill in the line below: get test predictions\n",
+    "preds_test = model.predict(final_X_test)\n",
+    "\n",
+    "# Check your answers\n",
+    "step_4.b.check()"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 26,
+   "id": "cf9dc8b1",
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2026-04-01T17:37:51.754267Z",
+     "iopub.status.busy": "2026-04-01T17:37:51.753694Z",
+     "iopub.status.idle": "2026-04-01T17:37:51.757728Z",
+     "shell.execute_reply": "2026-04-01T17:37:51.756673Z"
+    },
+    "papermill": {
+     "duration": 0.013692,
+     "end_time": "2026-04-01T17:37:51.759344",
+     "exception": false,
+     "start_time": "2026-04-01T17:37:51.745652",
+     "status": "completed"
+    },
+    "tags": []
+   },
+   "outputs": [],
+   "source": [
+    "# Lines below will give you a hint or solution code\n",
+    "# step_4.b.hint()\n",
+    "# step_4.b.solution()"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "ad80ff58",
+   "metadata": {
+    "papermill": {
+     "duration": 0.007323,
+     "end_time": "2026-04-01T17:37:51.774654",
+     "exception": false,
+     "start_time": "2026-04-01T17:37:51.767331",
+     "status": "completed"
+    },
+    "tags": []
+   },
+   "source": [
+    "Run the next code cell without changes to save your results to a CSV file that can be submitted directly to the competition."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 27,
+   "id": "15dfb6fe",
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2026-04-01T17:37:51.789868Z",
+     "iopub.status.busy": "2026-04-01T17:37:51.789597Z",
+     "iopub.status.idle": "2026-04-01T17:37:51.800897Z",
+     "shell.execute_reply": "2026-04-01T17:37:51.799882Z"
+    },
+    "papermill": {
+     "duration": 0.020419,
+     "end_time": "2026-04-01T17:37:51.802237",
+     "exception": false,
+     "start_time": "2026-04-01T17:37:51.781818",
+     "status": "completed"
+    },
+    "tags": []
+   },
+   "outputs": [],
+   "source": [
+    "# Save test predictions to file\n",
+    "output = pd.DataFrame({'Id': X_test.index,\n",
+    "                       'SalePrice': preds_test})\n",
+    "output.to_csv('submission.csv', index=False)"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "9f980eca",
+   "metadata": {
+    "papermill": {
+     "duration": 0.006835,
+     "end_time": "2026-04-01T17:37:51.816523",
+     "exception": false,
+     "start_time": "2026-04-01T17:37:51.809688",
+     "status": "completed"
+    },
+    "tags": []
+   },
+   "source": [
+    "# Submit your results\n",
+    "\n",
+    "Once you have successfully completed Step 4, you're ready to submit your results to the leaderboard!  (_You also learned how to do this in the previous exercise.  If you need a reminder of how to do this, please use the instructions below._)  \n",
+    "\n",
+    "First, you'll need to join the competition if you haven't already.  So open a new window by clicking on [this link](https://www.kaggle.com/c/home-data-for-ml-course).  Then click on the **Join Competition** button.\n",
+    "\n",
+    "![join competition image](https://storage.googleapis.com/kaggle-media/learn/images/wLmFtH3.png)\n",
+    "\n",
+    "Next, follow the instructions below:\n",
+    "1. Begin by clicking on the **Save Version** button in the top right corner of the window.  This will generate a pop-up window.  \n",
+    "2. Ensure that the **Save and Run All** option is selected, and then click on the **Save** button.\n",
+    "3. This generates a window in the bottom left corner of the notebook.  After it has finished running, click on the number to the right of the **Save Version** button.  This pulls up a list of versions on the right of the screen.  Click on the ellipsis **(...)** to the right of the most recent version, and select **Open in Viewer**.  This brings you into view mode of the same page. You will need to scroll down to get back to these instructions.\n",
+    "4. Click on the **Data** tab near the top of the screen.  Then, click on the file you would like to submit, and click on the **Submit** button to submit your results to the leaderboard.\n",
+    "\n",
+    "You have now successfully submitted to the competition!\n",
+    "\n",
+    "If you want to keep working to improve your performance, select the **Edit** button in the top right of the screen. Then you can change your code and repeat the process. There's a lot of room to improve, and you will climb up the leaderboard as you work.\n",
+    "\n",
+    "\n",
+    "# Keep going\n",
+    "\n",
+    "Move on to learn what **[categorical variables](https://www.kaggle.com/alexisbcook/categorical-variables)** are, along with how to incorporate them into your machine learning models.  Categorical variables are very common in real-world data, but you'll get an error if you try to plug them into your models without processing them first!"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "ca6d24c5",
+   "metadata": {
+    "papermill": {
+     "duration": 0.007039,
+     "end_time": "2026-04-01T17:37:51.830782",
+     "exception": false,
+     "start_time": "2026-04-01T17:37:51.823743",
+     "status": "completed"
+    },
+    "tags": []
+   },
+   "source": [
+    "---\n",
+    "\n",
+    "\n",
+    "\n",
+    "\n",
+    "*Have questions or comments? Visit the [course discussion forum](https://www.kaggle.com/learn/intermediate-machine-learning/discussion) to chat with other learners.*"
+   ]
+  }
+ ],
+ "metadata": {
+  "kaggle": {
+   "accelerator": "none",
+   "dataSources": [
+    {
+     "databundleVersionId": 111096,
+     "sourceId": 10211,
+     "sourceType": "competition"
+    }
+   ],
+   "dockerImageVersionId": 31153,
+   "isGpuEnabled": false,
+   "isInternetEnabled": false,
+   "language": "python",
+   "sourceType": "notebook"
+  },
+  "kernelspec": {
+   "display_name": "Python 3",
+   "language": "python",
+   "name": "python3"
+  },
+  "language_info": {
+   "codemirror_mode": {
+    "name": "ipython",
+    "version": 3
+   },
+   "file_extension": ".py",
+   "mimetype": "text/x-python",
+   "name": "python",
+   "nbconvert_exporter": "python",
+   "pygments_lexer": "ipython3",
+   "version": "3.11.13"
+  },
+  "papermill": {
+   "default_parameters": {},
+   "duration": 12.261495,
+   "end_time": "2026-04-01T17:37:52.557893",
+   "environment_variables": {},
+   "exception": null,
+   "input_path": "__notebook__.ipynb",
+   "output_path": "__notebook__.ipynb",
+   "parameters": {},
+   "start_time": "2026-04-01T17:37:40.296398",
+   "version": "2.6.0"
+  }
+ },
+ "nbformat": 4,
+ "nbformat_minor": 5
+}
