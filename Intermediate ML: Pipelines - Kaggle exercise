@@ -1,0 +1,1244 @@
+{
+ "cells": [
+  {
+   "cell_type": "markdown",
+   "id": "1940b2db",
+   "metadata": {
+    "papermill": {
+     "duration": 0.005914,
+     "end_time": "2026-04-07T15:08:23.948343",
+     "exception": false,
+     "start_time": "2026-04-07T15:08:23.942429",
+     "status": "completed"
+    },
+    "tags": []
+   },
+   "source": [
+    "**This notebook is an exercise in the [Intermediate Machine Learning](https://www.kaggle.com/learn/intermediate-machine-learning) course.  You can reference the tutorial at [this link](https://www.kaggle.com/alexisbcook/pipelines).**\n",
+    "\n",
+    "---\n"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "222bcca4",
+   "metadata": {
+    "papermill": {
+     "duration": 0.004914,
+     "end_time": "2026-04-07T15:08:23.958880",
+     "exception": false,
+     "start_time": "2026-04-07T15:08:23.953966",
+     "status": "completed"
+    },
+    "tags": []
+   },
+   "source": [
+    "In this exercise, you will use **pipelines** to improve the efficiency of your machine learning code.\n",
+    "\n",
+    "# Setup\n",
+    "\n",
+    "The questions below will give you feedback on your work. Run the following cell to set up the feedback system."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 1,
+   "id": "01a39d7a",
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2026-04-07T15:08:23.970051Z",
+     "iopub.status.busy": "2026-04-07T15:08:23.969648Z",
+     "iopub.status.idle": "2026-04-07T15:08:27.652200Z",
+     "shell.execute_reply": "2026-04-07T15:08:27.651043Z"
+    },
+    "papermill": {
+     "duration": 3.690001,
+     "end_time": "2026-04-07T15:08:27.653850",
+     "exception": false,
+     "start_time": "2026-04-07T15:08:23.963849",
+     "status": "completed"
+    },
+    "tags": []
+   },
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "Setup Complete\n"
+     ]
+    }
+   ],
+   "source": [
+    "# Set up code checking\n",
+    "import os\n",
+    "if not os.path.exists(\"../input/train.csv\"):\n",
+    "    os.symlink(\"../input/home-data-for-ml-course/train.csv\", \"../input/train.csv\")  \n",
+    "    os.symlink(\"../input/home-data-for-ml-course/test.csv\", \"../input/test.csv\") \n",
+    "from learntools.core import binder\n",
+    "binder.bind(globals())\n",
+    "from learntools.ml_intermediate.ex4 import *\n",
+    "print(\"Setup Complete\")"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "3c2d7322",
+   "metadata": {
+    "papermill": {
+     "duration": 0.004914,
+     "end_time": "2026-04-07T15:08:27.664042",
+     "exception": false,
+     "start_time": "2026-04-07T15:08:27.659128",
+     "status": "completed"
+    },
+    "tags": []
+   },
+   "source": [
+    "You will work with data from the [Housing Prices Competition for Kaggle Learn Users](https://www.kaggle.com/c/home-data-for-ml-course). \n",
+    "\n",
+    "![Ames Housing dataset image](https://storage.googleapis.com/kaggle-media/learn/images/lTJVG4e.png)\n",
+    "\n",
+    "Run the next code cell without changes to load the training and validation sets in `X_train`, `X_valid`, `y_train`, and `y_valid`.  The test set is loaded in `X_test`."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 2,
+   "id": "be27a399",
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2026-04-07T15:08:27.675574Z",
+     "iopub.status.busy": "2026-04-07T15:08:27.674486Z",
+     "iopub.status.idle": "2026-04-07T15:08:27.895107Z",
+     "shell.execute_reply": "2026-04-07T15:08:27.894152Z"
+    },
+    "papermill": {
+     "duration": 0.228127,
+     "end_time": "2026-04-07T15:08:27.896928",
+     "exception": false,
+     "start_time": "2026-04-07T15:08:27.668801",
+     "status": "completed"
+    },
+    "tags": []
+   },
+   "outputs": [],
+   "source": [
+    "import pandas as pd\n",
+    "from sklearn.model_selection import train_test_split\n",
+    "\n",
+    "# Read the data\n",
+    "X_full = pd.read_csv('../input/train.csv', index_col='Id')\n",
+    "X_test_full = pd.read_csv('../input/test.csv', index_col='Id')\n",
+    "\n",
+    "# Remove rows with missing target, separate target from predictors\n",
+    "X_full.dropna(axis=0, subset=['SalePrice'], inplace=True)\n",
+    "y = X_full.SalePrice\n",
+    "X_full.drop(['SalePrice'], axis=1, inplace=True)\n",
+    "\n",
+    "# Break off validation set from training data\n",
+    "X_train_full, X_valid_full, y_train, y_valid = train_test_split(X_full, y, \n",
+    "                                                                train_size=0.8, test_size=0.2,\n",
+    "                                                                random_state=0)\n",
+    "\n",
+    "# \"Cardinality\" means the number of unique values in a column\n",
+    "# Select categorical columns with relatively low cardinality (convenient but arbitrary)\n",
+    "categorical_cols = [cname for cname in X_train_full.columns if\n",
+    "                    X_train_full[cname].nunique() < 10 and \n",
+    "                    X_train_full[cname].dtype == \"object\"]\n",
+    "\n",
+    "# Select numerical columns\n",
+    "numerical_cols = [cname for cname in X_train_full.columns if \n",
+    "                X_train_full[cname].dtype in ['int64', 'float64']]\n",
+    "\n",
+    "# Keep selected columns only\n",
+    "my_cols = categorical_cols + numerical_cols\n",
+    "X_train = X_train_full[my_cols].copy()\n",
+    "X_valid = X_valid_full[my_cols].copy()\n",
+    "X_test = X_test_full[my_cols].copy()"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 3,
+   "id": "be751495",
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2026-04-07T15:08:27.907970Z",
+     "iopub.status.busy": "2026-04-07T15:08:27.907576Z",
+     "iopub.status.idle": "2026-04-07T15:08:27.940390Z",
+     "shell.execute_reply": "2026-04-07T15:08:27.939157Z"
+    },
+    "papermill": {
+     "duration": 0.041003,
+     "end_time": "2026-04-07T15:08:27.942923",
+     "exception": false,
+     "start_time": "2026-04-07T15:08:27.901920",
+     "status": "completed"
+    },
+    "tags": []
+   },
+   "outputs": [
+    {
+     "data": {
+      "text/html": [
+       "<div>\n",
+       "<style scoped>\n",
+       "    .dataframe tbody tr th:only-of-type {\n",
+       "        vertical-align: middle;\n",
+       "    }\n",
+       "\n",
+       "    .dataframe tbody tr th {\n",
+       "        vertical-align: top;\n",
+       "    }\n",
+       "\n",
+       "    .dataframe thead th {\n",
+       "        text-align: right;\n",
+       "    }\n",
+       "</style>\n",
+       "<table border=\"1\" class=\"dataframe\">\n",
+       "  <thead>\n",
+       "    <tr style=\"text-align: right;\">\n",
+       "      <th></th>\n",
+       "      <th>MSZoning</th>\n",
+       "      <th>Street</th>\n",
+       "      <th>Alley</th>\n",
+       "      <th>LotShape</th>\n",
+       "      <th>LandContour</th>\n",
+       "      <th>Utilities</th>\n",
+       "      <th>LotConfig</th>\n",
+       "      <th>LandSlope</th>\n",
+       "      <th>Condition1</th>\n",
+       "      <th>Condition2</th>\n",
+       "      <th>...</th>\n",
+       "      <th>GarageArea</th>\n",
+       "      <th>WoodDeckSF</th>\n",
+       "      <th>OpenPorchSF</th>\n",
+       "      <th>EnclosedPorch</th>\n",
+       "      <th>3SsnPorch</th>\n",
+       "      <th>ScreenPorch</th>\n",
+       "      <th>PoolArea</th>\n",
+       "      <th>MiscVal</th>\n",
+       "      <th>MoSold</th>\n",
+       "      <th>YrSold</th>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>Id</th>\n",
+       "      <th></th>\n",
+       "      <th></th>\n",
+       "      <th></th>\n",
+       "      <th></th>\n",
+       "      <th></th>\n",
+       "      <th></th>\n",
+       "      <th></th>\n",
+       "      <th></th>\n",
+       "      <th></th>\n",
+       "      <th></th>\n",
+       "      <th></th>\n",
+       "      <th></th>\n",
+       "      <th></th>\n",
+       "      <th></th>\n",
+       "      <th></th>\n",
+       "      <th></th>\n",
+       "      <th></th>\n",
+       "      <th></th>\n",
+       "      <th></th>\n",
+       "      <th></th>\n",
+       "      <th></th>\n",
+       "    </tr>\n",
+       "  </thead>\n",
+       "  <tbody>\n",
+       "    <tr>\n",
+       "      <th>619</th>\n",
+       "      <td>RL</td>\n",
+       "      <td>Pave</td>\n",
+       "      <td>NaN</td>\n",
+       "      <td>Reg</td>\n",
+       "      <td>Lvl</td>\n",
+       "      <td>AllPub</td>\n",
+       "      <td>Inside</td>\n",
+       "      <td>Gtl</td>\n",
+       "      <td>Norm</td>\n",
+       "      <td>Norm</td>\n",
+       "      <td>...</td>\n",
+       "      <td>774</td>\n",
+       "      <td>0</td>\n",
+       "      <td>108</td>\n",
+       "      <td>0</td>\n",
+       "      <td>0</td>\n",
+       "      <td>260</td>\n",
+       "      <td>0</td>\n",
+       "      <td>0</td>\n",
+       "      <td>7</td>\n",
+       "      <td>2007</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>871</th>\n",
+       "      <td>RL</td>\n",
+       "      <td>Pave</td>\n",
+       "      <td>NaN</td>\n",
+       "      <td>Reg</td>\n",
+       "      <td>Lvl</td>\n",
+       "      <td>AllPub</td>\n",
+       "      <td>Inside</td>\n",
+       "      <td>Gtl</td>\n",
+       "      <td>PosN</td>\n",
+       "      <td>Norm</td>\n",
+       "      <td>...</td>\n",
+       "      <td>308</td>\n",
+       "      <td>0</td>\n",
+       "      <td>0</td>\n",
+       "      <td>0</td>\n",
+       "      <td>0</td>\n",
+       "      <td>0</td>\n",
+       "      <td>0</td>\n",
+       "      <td>0</td>\n",
+       "      <td>8</td>\n",
+       "      <td>2009</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>93</th>\n",
+       "      <td>RL</td>\n",
+       "      <td>Pave</td>\n",
+       "      <td>Grvl</td>\n",
+       "      <td>IR1</td>\n",
+       "      <td>HLS</td>\n",
+       "      <td>AllPub</td>\n",
+       "      <td>Inside</td>\n",
+       "      <td>Gtl</td>\n",
+       "      <td>Norm</td>\n",
+       "      <td>Norm</td>\n",
+       "      <td>...</td>\n",
+       "      <td>432</td>\n",
+       "      <td>0</td>\n",
+       "      <td>0</td>\n",
+       "      <td>44</td>\n",
+       "      <td>0</td>\n",
+       "      <td>0</td>\n",
+       "      <td>0</td>\n",
+       "      <td>0</td>\n",
+       "      <td>8</td>\n",
+       "      <td>2009</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>818</th>\n",
+       "      <td>RL</td>\n",
+       "      <td>Pave</td>\n",
+       "      <td>NaN</td>\n",
+       "      <td>IR1</td>\n",
+       "      <td>Lvl</td>\n",
+       "      <td>AllPub</td>\n",
+       "      <td>CulDSac</td>\n",
+       "      <td>Gtl</td>\n",
+       "      <td>Norm</td>\n",
+       "      <td>Norm</td>\n",
+       "      <td>...</td>\n",
+       "      <td>857</td>\n",
+       "      <td>150</td>\n",
+       "      <td>59</td>\n",
+       "      <td>0</td>\n",
+       "      <td>0</td>\n",
+       "      <td>0</td>\n",
+       "      <td>0</td>\n",
+       "      <td>0</td>\n",
+       "      <td>7</td>\n",
+       "      <td>2008</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>303</th>\n",
+       "      <td>RL</td>\n",
+       "      <td>Pave</td>\n",
+       "      <td>NaN</td>\n",
+       "      <td>IR1</td>\n",
+       "      <td>Lvl</td>\n",
+       "      <td>AllPub</td>\n",
+       "      <td>Corner</td>\n",
+       "      <td>Gtl</td>\n",
+       "      <td>Norm</td>\n",
+       "      <td>Norm</td>\n",
+       "      <td>...</td>\n",
+       "      <td>843</td>\n",
+       "      <td>468</td>\n",
+       "      <td>81</td>\n",
+       "      <td>0</td>\n",
+       "      <td>0</td>\n",
+       "      <td>0</td>\n",
+       "      <td>0</td>\n",
+       "      <td>0</td>\n",
+       "      <td>1</td>\n",
+       "      <td>2006</td>\n",
+       "    </tr>\n",
+       "  </tbody>\n",
+       "</table>\n",
+       "<p>5 rows × 76 columns</p>\n",
+       "</div>"
+      ],
+      "text/plain": [
+       "    MSZoning Street Alley LotShape LandContour Utilities LotConfig LandSlope  \\\n",
+       "Id                                                                             \n",
+       "619       RL   Pave   NaN      Reg         Lvl    AllPub    Inside       Gtl   \n",
+       "871       RL   Pave   NaN      Reg         Lvl    AllPub    Inside       Gtl   \n",
+       "93        RL   Pave  Grvl      IR1         HLS    AllPub    Inside       Gtl   \n",
+       "818       RL   Pave   NaN      IR1         Lvl    AllPub   CulDSac       Gtl   \n",
+       "303       RL   Pave   NaN      IR1         Lvl    AllPub    Corner       Gtl   \n",
+       "\n",
+       "    Condition1 Condition2  ... GarageArea WoodDeckSF OpenPorchSF  \\\n",
+       "Id                         ...                                     \n",
+       "619       Norm       Norm  ...        774          0         108   \n",
+       "871       PosN       Norm  ...        308          0           0   \n",
+       "93        Norm       Norm  ...        432          0           0   \n",
+       "818       Norm       Norm  ...        857        150          59   \n",
+       "303       Norm       Norm  ...        843        468          81   \n",
+       "\n",
+       "    EnclosedPorch 3SsnPorch ScreenPorch PoolArea MiscVal MoSold YrSold  \n",
+       "Id                                                                      \n",
+       "619             0         0         260        0       0      7   2007  \n",
+       "871             0         0           0        0       0      8   2009  \n",
+       "93             44         0           0        0       0      8   2009  \n",
+       "818             0         0           0        0       0      7   2008  \n",
+       "303             0         0           0        0       0      1   2006  \n",
+       "\n",
+       "[5 rows x 76 columns]"
+      ]
+     },
+     "execution_count": 3,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "source": [
+    "X_train.head()"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "7e906e2e",
+   "metadata": {
+    "papermill": {
+     "duration": 0.004785,
+     "end_time": "2026-04-07T15:08:27.953198",
+     "exception": false,
+     "start_time": "2026-04-07T15:08:27.948413",
+     "status": "completed"
+    },
+    "tags": []
+   },
+   "source": [
+    "The next code cell uses code from the tutorial to preprocess the data and train a model.  Run this code without changes."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 4,
+   "id": "9146e8bf",
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2026-04-07T15:08:27.965531Z",
+     "iopub.status.busy": "2026-04-07T15:08:27.965192Z",
+     "iopub.status.idle": "2026-04-07T15:08:31.259506Z",
+     "shell.execute_reply": "2026-04-07T15:08:31.258397Z"
+    },
+    "papermill": {
+     "duration": 3.302853,
+     "end_time": "2026-04-07T15:08:31.261639",
+     "exception": false,
+     "start_time": "2026-04-07T15:08:27.958786",
+     "status": "completed"
+    },
+    "tags": []
+   },
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "MAE: 17614.81993150685\n"
+     ]
+    }
+   ],
+   "source": [
+    "from sklearn.compose import ColumnTransformer\n",
+    "from sklearn.pipeline import Pipeline\n",
+    "from sklearn.impute import SimpleImputer\n",
+    "from sklearn.preprocessing import OneHotEncoder\n",
+    "from sklearn.ensemble import RandomForestRegressor\n",
+    "from sklearn.metrics import mean_absolute_error\n",
+    "\n",
+    "# Preprocessing for numerical data\n",
+    "numerical_transformer = SimpleImputer(strategy='constant')\n",
+    "\n",
+    "# Preprocessing for categorical data\n",
+    "categorical_transformer = Pipeline(steps=[\n",
+    "    ('imputer', SimpleImputer(strategy='most_frequent')),\n",
+    "    ('onehot', OneHotEncoder(handle_unknown='ignore'))\n",
+    "])\n",
+    "\n",
+    "# Bundle preprocessing for numerical and categorical data\n",
+    "preprocessor = ColumnTransformer(\n",
+    "    transformers=[\n",
+    "        ('num', numerical_transformer, numerical_cols),\n",
+    "        ('cat', categorical_transformer, categorical_cols)\n",
+    "    ])\n",
+    "\n",
+    "# Define model\n",
+    "model = RandomForestRegressor(n_estimators=100, random_state=0)\n",
+    "\n",
+    "# Bundle preprocessing and modeling code in a pipeline\n",
+    "clf = Pipeline(steps=[('preprocessor', preprocessor),\n",
+    "                      ('model', model)\n",
+    "                     ])\n",
+    "\n",
+    "# Preprocessing of training data, fit model \n",
+    "clf.fit(X_train, y_train)\n",
+    "\n",
+    "# Preprocessing of validation data, get predictions\n",
+    "preds = clf.predict(X_valid)\n",
+    "\n",
+    "print('MAE:', mean_absolute_error(y_valid, preds))"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "6bbf137a",
+   "metadata": {
+    "papermill": {
+     "duration": 0.005363,
+     "end_time": "2026-04-07T15:08:31.272478",
+     "exception": false,
+     "start_time": "2026-04-07T15:08:31.267115",
+     "status": "completed"
+    },
+    "tags": []
+   },
+   "source": [
+    "### This part is fully written by hand after reviewing and understating how the notebook was created"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 5,
+   "id": "05a7a57b",
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2026-04-07T15:08:31.289712Z",
+     "iopub.status.busy": "2026-04-07T15:08:31.289159Z",
+     "iopub.status.idle": "2026-04-07T15:08:31.311340Z",
+     "shell.execute_reply": "2026-04-07T15:08:31.310039Z"
+    },
+    "papermill": {
+     "duration": 0.034209,
+     "end_time": "2026-04-07T15:08:31.313068",
+     "exception": false,
+     "start_time": "2026-04-07T15:08:31.278859",
+     "status": "completed"
+    },
+    "tags": []
+   },
+   "outputs": [],
+   "source": [
+    "from sklearn.compose import ColumnTransformer\n",
+    "from sklearn.pipeline import Pipeline\n",
+    "from sklearn.impute import SimpleImputer\n",
+    "from sklearn.preprocessing import OneHotEncoder\n",
+    "from sklearn.ensemble import RandomForestRegressor\n",
+    "from sklearn.metrics import mean_absolute_error\n",
+    "\n",
+    "# We have to first transform create numerical and categorical transformers\n",
+    "# then create a pipeline for the transformers which uses ColumnTransformer\n",
+    "# then create the ML model\n",
+    "# pass all the models to the Pipeline\n",
+    "\n",
+    "# Numerical Columns\n",
+    "num_cols = [col for col in X_train_full.columns if X_train_full[col].dtype in ['float64', 'int64']]\n",
+    "\n",
+    "# Categorical Columns\n",
+    "cat_cols = [col for col in X_train_full.columns if X_train_full[col].dtype == 'object' and X_train_full[col].nunique() < 10]\n",
+    "\n",
+    "# Selecting only these columns from the Datasets\n",
+    "used_cols = num_cols + cat_cols\n",
+    "X_train = X_train_full[used_cols].copy()\n",
+    "X_valid = X_valid_full[used_cols].copy()\n",
+    "X_test = X_test_full[used_cols].copy()"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 6,
+   "id": "9a3ff4aa",
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2026-04-07T15:08:31.325738Z",
+     "iopub.status.busy": "2026-04-07T15:08:31.325403Z",
+     "iopub.status.idle": "2026-04-07T15:08:31.334433Z",
+     "shell.execute_reply": "2026-04-07T15:08:31.333281Z"
+    },
+    "papermill": {
+     "duration": 0.017324,
+     "end_time": "2026-04-07T15:08:31.336157",
+     "exception": false,
+     "start_time": "2026-04-07T15:08:31.318833",
+     "status": "completed"
+    },
+    "tags": []
+   },
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "MAE: 17614.81993150685\n"
+     ]
+    }
+   ],
+   "source": [
+    "# Creating the column transformers\n",
+    "#first the num transformer\n",
+    "num_trans = SimpleImputer(strategy='mean')\n",
+    "#Second the categorical transformer\n",
+    "cat_trans = Pipeline(steps=[('imputer',SimpleImputer(strategy='most_frequent')),\n",
+    "                           ('1hot', OneHotEncoder(handle_unknown='ignore'))\n",
+    "                           ])\n",
+    "#Thirdly creating the ColumnTransformer giving it the transformers from above and the columns that need transforming \n",
+    "cols_transformer = ColumnTransformer(transformers=[('nums', num_trans, num_cols),\n",
+    "                                            ('cat', cat_trans, cat_cols)\n",
+    "                                                  ])\n",
+    "#Create the ML model\n",
+    "model = RandomForestRegressor(random_state=1)\n",
+    "\n",
+    "#Pass all of this mess into the Pipeline\n",
+    "pipe = Pipeline(steps=[('preprocessor', cols_transformer),\n",
+    "                      ('MLmodel', model)\n",
+    "                      ])\n",
+    "score = mean_absolute_error(y_valid, preds)\n",
+    "print('MAE:', score)"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 7,
+   "id": "a27cd12c",
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2026-04-07T15:08:31.349274Z",
+     "iopub.status.busy": "2026-04-07T15:08:31.348860Z",
+     "iopub.status.idle": "2026-04-07T15:08:34.257074Z",
+     "shell.execute_reply": "2026-04-07T15:08:34.256071Z"
+    },
+    "papermill": {
+     "duration": 2.916809,
+     "end_time": "2026-04-07T15:08:34.258697",
+     "exception": false,
+     "start_time": "2026-04-07T15:08:31.341888",
+     "status": "completed"
+    },
+    "tags": []
+   },
+   "outputs": [
+    {
+     "data": {
+      "text/html": [
+       "<style>#sk-container-id-1 {color: black;background-color: white;}#sk-container-id-1 pre{padding: 0;}#sk-container-id-1 div.sk-toggleable {background-color: white;}#sk-container-id-1 label.sk-toggleable__label {cursor: pointer;display: block;width: 100%;margin-bottom: 0;padding: 0.3em;box-sizing: border-box;text-align: center;}#sk-container-id-1 label.sk-toggleable__label-arrow:before {content: \"▸\";float: left;margin-right: 0.25em;color: #696969;}#sk-container-id-1 label.sk-toggleable__label-arrow:hover:before {color: black;}#sk-container-id-1 div.sk-estimator:hover label.sk-toggleable__label-arrow:before {color: black;}#sk-container-id-1 div.sk-toggleable__content {max-height: 0;max-width: 0;overflow: hidden;text-align: left;background-color: #f0f8ff;}#sk-container-id-1 div.sk-toggleable__content pre {margin: 0.2em;color: black;border-radius: 0.25em;background-color: #f0f8ff;}#sk-container-id-1 input.sk-toggleable__control:checked~div.sk-toggleable__content {max-height: 200px;max-width: 100%;overflow: auto;}#sk-container-id-1 input.sk-toggleable__control:checked~label.sk-toggleable__label-arrow:before {content: \"▾\";}#sk-container-id-1 div.sk-estimator input.sk-toggleable__control:checked~label.sk-toggleable__label {background-color: #d4ebff;}#sk-container-id-1 div.sk-label input.sk-toggleable__control:checked~label.sk-toggleable__label {background-color: #d4ebff;}#sk-container-id-1 input.sk-hidden--visually {border: 0;clip: rect(1px 1px 1px 1px);clip: rect(1px, 1px, 1px, 1px);height: 1px;margin: -1px;overflow: hidden;padding: 0;position: absolute;width: 1px;}#sk-container-id-1 div.sk-estimator {font-family: monospace;background-color: #f0f8ff;border: 1px dotted black;border-radius: 0.25em;box-sizing: border-box;margin-bottom: 0.5em;}#sk-container-id-1 div.sk-estimator:hover {background-color: #d4ebff;}#sk-container-id-1 div.sk-parallel-item::after {content: \"\";width: 100%;border-bottom: 1px solid gray;flex-grow: 1;}#sk-container-id-1 div.sk-label:hover label.sk-toggleable__label {background-color: #d4ebff;}#sk-container-id-1 div.sk-serial::before {content: \"\";position: absolute;border-left: 1px solid gray;box-sizing: border-box;top: 0;bottom: 0;left: 50%;z-index: 0;}#sk-container-id-1 div.sk-serial {display: flex;flex-direction: column;align-items: center;background-color: white;padding-right: 0.2em;padding-left: 0.2em;position: relative;}#sk-container-id-1 div.sk-item {position: relative;z-index: 1;}#sk-container-id-1 div.sk-parallel {display: flex;align-items: stretch;justify-content: center;background-color: white;position: relative;}#sk-container-id-1 div.sk-item::before, #sk-container-id-1 div.sk-parallel-item::before {content: \"\";position: absolute;border-left: 1px solid gray;box-sizing: border-box;top: 0;bottom: 0;left: 50%;z-index: -1;}#sk-container-id-1 div.sk-parallel-item {display: flex;flex-direction: column;z-index: 1;position: relative;background-color: white;}#sk-container-id-1 div.sk-parallel-item:first-child::after {align-self: flex-end;width: 50%;}#sk-container-id-1 div.sk-parallel-item:last-child::after {align-self: flex-start;width: 50%;}#sk-container-id-1 div.sk-parallel-item:only-child::after {width: 0;}#sk-container-id-1 div.sk-dashed-wrapped {border: 1px dashed gray;margin: 0 0.4em 0.5em 0.4em;box-sizing: border-box;padding-bottom: 0.4em;background-color: white;}#sk-container-id-1 div.sk-label label {font-family: monospace;font-weight: bold;display: inline-block;line-height: 1.2em;}#sk-container-id-1 div.sk-label-container {text-align: center;}#sk-container-id-1 div.sk-container {/* jupyter's `normalize.less` sets `[hidden] { display: none; }` but bootstrap.min.css set `[hidden] { display: none !important; }` so we also need the `!important` here to be able to override the default hidden behavior on the sphinx rendered scikit-learn.org. See: https://github.com/scikit-learn/scikit-learn/issues/21755 */display: inline-block !important;position: relative;}#sk-container-id-1 div.sk-text-repr-fallback {display: none;}</style><div id=\"sk-container-id-1\" class=\"sk-top-container\"><div class=\"sk-text-repr-fallback\"><pre>Pipeline(steps=[(&#x27;preprocessor&#x27;,\n",
+       "                 ColumnTransformer(transformers=[(&#x27;nums&#x27;, SimpleImputer(),\n",
+       "                                                  [&#x27;MSSubClass&#x27;, &#x27;LotFrontage&#x27;,\n",
+       "                                                   &#x27;LotArea&#x27;, &#x27;OverallQual&#x27;,\n",
+       "                                                   &#x27;OverallCond&#x27;, &#x27;YearBuilt&#x27;,\n",
+       "                                                   &#x27;YearRemodAdd&#x27;, &#x27;MasVnrArea&#x27;,\n",
+       "                                                   &#x27;BsmtFinSF1&#x27;, &#x27;BsmtFinSF2&#x27;,\n",
+       "                                                   &#x27;BsmtUnfSF&#x27;, &#x27;TotalBsmtSF&#x27;,\n",
+       "                                                   &#x27;1stFlrSF&#x27;, &#x27;2ndFlrSF&#x27;,\n",
+       "                                                   &#x27;LowQualFinSF&#x27;, &#x27;GrLivArea&#x27;,\n",
+       "                                                   &#x27;BsmtFullBath&#x27;,\n",
+       "                                                   &#x27;BsmtHalfBath&#x27;, &#x27;FullBath&#x27;,\n",
+       "                                                   &#x27;HalfBath&#x27;, &#x27;Be...\n",
+       "                                                   &#x27;LotConfig&#x27;, &#x27;LandSlope&#x27;,\n",
+       "                                                   &#x27;Condition1&#x27;, &#x27;Condition2&#x27;,\n",
+       "                                                   &#x27;BldgType&#x27;, &#x27;HouseStyle&#x27;,\n",
+       "                                                   &#x27;RoofStyle&#x27;, &#x27;RoofMatl&#x27;,\n",
+       "                                                   &#x27;MasVnrType&#x27;, &#x27;ExterQual&#x27;,\n",
+       "                                                   &#x27;ExterCond&#x27;, &#x27;Foundation&#x27;,\n",
+       "                                                   &#x27;BsmtQual&#x27;, &#x27;BsmtCond&#x27;,\n",
+       "                                                   &#x27;BsmtExposure&#x27;,\n",
+       "                                                   &#x27;BsmtFinType1&#x27;,\n",
+       "                                                   &#x27;BsmtFinType2&#x27;, &#x27;Heating&#x27;,\n",
+       "                                                   &#x27;HeatingQC&#x27;, &#x27;CentralAir&#x27;,\n",
+       "                                                   &#x27;Electrical&#x27;, &#x27;KitchenQual&#x27;,\n",
+       "                                                   &#x27;Functional&#x27;, &#x27;FireplaceQu&#x27;, ...])])),\n",
+       "                (&#x27;MLmodel&#x27;, RandomForestRegressor(random_state=1))])</pre><b>In a Jupyter environment, please rerun this cell to show the HTML representation or trust the notebook. <br />On GitHub, the HTML representation is unable to render, please try loading this page with nbviewer.org.</b></div><div class=\"sk-container\" hidden><div class=\"sk-item sk-dashed-wrapped\"><div class=\"sk-label-container\"><div class=\"sk-label sk-toggleable\"><input class=\"sk-toggleable__control sk-hidden--visually\" id=\"sk-estimator-id-1\" type=\"checkbox\" ><label for=\"sk-estimator-id-1\" class=\"sk-toggleable__label sk-toggleable__label-arrow\">Pipeline</label><div class=\"sk-toggleable__content\"><pre>Pipeline(steps=[(&#x27;preprocessor&#x27;,\n",
+       "                 ColumnTransformer(transformers=[(&#x27;nums&#x27;, SimpleImputer(),\n",
+       "                                                  [&#x27;MSSubClass&#x27;, &#x27;LotFrontage&#x27;,\n",
+       "                                                   &#x27;LotArea&#x27;, &#x27;OverallQual&#x27;,\n",
+       "                                                   &#x27;OverallCond&#x27;, &#x27;YearBuilt&#x27;,\n",
+       "                                                   &#x27;YearRemodAdd&#x27;, &#x27;MasVnrArea&#x27;,\n",
+       "                                                   &#x27;BsmtFinSF1&#x27;, &#x27;BsmtFinSF2&#x27;,\n",
+       "                                                   &#x27;BsmtUnfSF&#x27;, &#x27;TotalBsmtSF&#x27;,\n",
+       "                                                   &#x27;1stFlrSF&#x27;, &#x27;2ndFlrSF&#x27;,\n",
+       "                                                   &#x27;LowQualFinSF&#x27;, &#x27;GrLivArea&#x27;,\n",
+       "                                                   &#x27;BsmtFullBath&#x27;,\n",
+       "                                                   &#x27;BsmtHalfBath&#x27;, &#x27;FullBath&#x27;,\n",
+       "                                                   &#x27;HalfBath&#x27;, &#x27;Be...\n",
+       "                                                   &#x27;LotConfig&#x27;, &#x27;LandSlope&#x27;,\n",
+       "                                                   &#x27;Condition1&#x27;, &#x27;Condition2&#x27;,\n",
+       "                                                   &#x27;BldgType&#x27;, &#x27;HouseStyle&#x27;,\n",
+       "                                                   &#x27;RoofStyle&#x27;, &#x27;RoofMatl&#x27;,\n",
+       "                                                   &#x27;MasVnrType&#x27;, &#x27;ExterQual&#x27;,\n",
+       "                                                   &#x27;ExterCond&#x27;, &#x27;Foundation&#x27;,\n",
+       "                                                   &#x27;BsmtQual&#x27;, &#x27;BsmtCond&#x27;,\n",
+       "                                                   &#x27;BsmtExposure&#x27;,\n",
+       "                                                   &#x27;BsmtFinType1&#x27;,\n",
+       "                                                   &#x27;BsmtFinType2&#x27;, &#x27;Heating&#x27;,\n",
+       "                                                   &#x27;HeatingQC&#x27;, &#x27;CentralAir&#x27;,\n",
+       "                                                   &#x27;Electrical&#x27;, &#x27;KitchenQual&#x27;,\n",
+       "                                                   &#x27;Functional&#x27;, &#x27;FireplaceQu&#x27;, ...])])),\n",
+       "                (&#x27;MLmodel&#x27;, RandomForestRegressor(random_state=1))])</pre></div></div></div><div class=\"sk-serial\"><div class=\"sk-item sk-dashed-wrapped\"><div class=\"sk-label-container\"><div class=\"sk-label sk-toggleable\"><input class=\"sk-toggleable__control sk-hidden--visually\" id=\"sk-estimator-id-2\" type=\"checkbox\" ><label for=\"sk-estimator-id-2\" class=\"sk-toggleable__label sk-toggleable__label-arrow\">preprocessor: ColumnTransformer</label><div class=\"sk-toggleable__content\"><pre>ColumnTransformer(transformers=[(&#x27;nums&#x27;, SimpleImputer(),\n",
+       "                                 [&#x27;MSSubClass&#x27;, &#x27;LotFrontage&#x27;, &#x27;LotArea&#x27;,\n",
+       "                                  &#x27;OverallQual&#x27;, &#x27;OverallCond&#x27;, &#x27;YearBuilt&#x27;,\n",
+       "                                  &#x27;YearRemodAdd&#x27;, &#x27;MasVnrArea&#x27;, &#x27;BsmtFinSF1&#x27;,\n",
+       "                                  &#x27;BsmtFinSF2&#x27;, &#x27;BsmtUnfSF&#x27;, &#x27;TotalBsmtSF&#x27;,\n",
+       "                                  &#x27;1stFlrSF&#x27;, &#x27;2ndFlrSF&#x27;, &#x27;LowQualFinSF&#x27;,\n",
+       "                                  &#x27;GrLivArea&#x27;, &#x27;BsmtFullBath&#x27;, &#x27;BsmtHalfBath&#x27;,\n",
+       "                                  &#x27;FullBath&#x27;, &#x27;HalfBath&#x27;, &#x27;BedroomAbvGr&#x27;,\n",
+       "                                  &#x27;KitchenAbvGr&#x27;, &#x27;TotR...\n",
+       "                                 [&#x27;MSZoning&#x27;, &#x27;Street&#x27;, &#x27;Alley&#x27;, &#x27;LotShape&#x27;,\n",
+       "                                  &#x27;LandContour&#x27;, &#x27;Utilities&#x27;, &#x27;LotConfig&#x27;,\n",
+       "                                  &#x27;LandSlope&#x27;, &#x27;Condition1&#x27;, &#x27;Condition2&#x27;,\n",
+       "                                  &#x27;BldgType&#x27;, &#x27;HouseStyle&#x27;, &#x27;RoofStyle&#x27;,\n",
+       "                                  &#x27;RoofMatl&#x27;, &#x27;MasVnrType&#x27;, &#x27;ExterQual&#x27;,\n",
+       "                                  &#x27;ExterCond&#x27;, &#x27;Foundation&#x27;, &#x27;BsmtQual&#x27;,\n",
+       "                                  &#x27;BsmtCond&#x27;, &#x27;BsmtExposure&#x27;, &#x27;BsmtFinType1&#x27;,\n",
+       "                                  &#x27;BsmtFinType2&#x27;, &#x27;Heating&#x27;, &#x27;HeatingQC&#x27;,\n",
+       "                                  &#x27;CentralAir&#x27;, &#x27;Electrical&#x27;, &#x27;KitchenQual&#x27;,\n",
+       "                                  &#x27;Functional&#x27;, &#x27;FireplaceQu&#x27;, ...])])</pre></div></div></div><div class=\"sk-parallel\"><div class=\"sk-parallel-item\"><div class=\"sk-item\"><div class=\"sk-label-container\"><div class=\"sk-label sk-toggleable\"><input class=\"sk-toggleable__control sk-hidden--visually\" id=\"sk-estimator-id-3\" type=\"checkbox\" ><label for=\"sk-estimator-id-3\" class=\"sk-toggleable__label sk-toggleable__label-arrow\">nums</label><div class=\"sk-toggleable__content\"><pre>[&#x27;MSSubClass&#x27;, &#x27;LotFrontage&#x27;, &#x27;LotArea&#x27;, &#x27;OverallQual&#x27;, &#x27;OverallCond&#x27;, &#x27;YearBuilt&#x27;, &#x27;YearRemodAdd&#x27;, &#x27;MasVnrArea&#x27;, &#x27;BsmtFinSF1&#x27;, &#x27;BsmtFinSF2&#x27;, &#x27;BsmtUnfSF&#x27;, &#x27;TotalBsmtSF&#x27;, &#x27;1stFlrSF&#x27;, &#x27;2ndFlrSF&#x27;, &#x27;LowQualFinSF&#x27;, &#x27;GrLivArea&#x27;, &#x27;BsmtFullBath&#x27;, &#x27;BsmtHalfBath&#x27;, &#x27;FullBath&#x27;, &#x27;HalfBath&#x27;, &#x27;BedroomAbvGr&#x27;, &#x27;KitchenAbvGr&#x27;, &#x27;TotRmsAbvGrd&#x27;, &#x27;Fireplaces&#x27;, &#x27;GarageYrBlt&#x27;, &#x27;GarageCars&#x27;, &#x27;GarageArea&#x27;, &#x27;WoodDeckSF&#x27;, &#x27;OpenPorchSF&#x27;, &#x27;EnclosedPorch&#x27;, &#x27;3SsnPorch&#x27;, &#x27;ScreenPorch&#x27;, &#x27;PoolArea&#x27;, &#x27;MiscVal&#x27;, &#x27;MoSold&#x27;, &#x27;YrSold&#x27;]</pre></div></div></div><div class=\"sk-serial\"><div class=\"sk-item\"><div class=\"sk-estimator sk-toggleable\"><input class=\"sk-toggleable__control sk-hidden--visually\" id=\"sk-estimator-id-4\" type=\"checkbox\" ><label for=\"sk-estimator-id-4\" class=\"sk-toggleable__label sk-toggleable__label-arrow\">SimpleImputer</label><div class=\"sk-toggleable__content\"><pre>SimpleImputer()</pre></div></div></div></div></div></div><div class=\"sk-parallel-item\"><div class=\"sk-item\"><div class=\"sk-label-container\"><div class=\"sk-label sk-toggleable\"><input class=\"sk-toggleable__control sk-hidden--visually\" id=\"sk-estimator-id-5\" type=\"checkbox\" ><label for=\"sk-estimator-id-5\" class=\"sk-toggleable__label sk-toggleable__label-arrow\">cat</label><div class=\"sk-toggleable__content\"><pre>[&#x27;MSZoning&#x27;, &#x27;Street&#x27;, &#x27;Alley&#x27;, &#x27;LotShape&#x27;, &#x27;LandContour&#x27;, &#x27;Utilities&#x27;, &#x27;LotConfig&#x27;, &#x27;LandSlope&#x27;, &#x27;Condition1&#x27;, &#x27;Condition2&#x27;, &#x27;BldgType&#x27;, &#x27;HouseStyle&#x27;, &#x27;RoofStyle&#x27;, &#x27;RoofMatl&#x27;, &#x27;MasVnrType&#x27;, &#x27;ExterQual&#x27;, &#x27;ExterCond&#x27;, &#x27;Foundation&#x27;, &#x27;BsmtQual&#x27;, &#x27;BsmtCond&#x27;, &#x27;BsmtExposure&#x27;, &#x27;BsmtFinType1&#x27;, &#x27;BsmtFinType2&#x27;, &#x27;Heating&#x27;, &#x27;HeatingQC&#x27;, &#x27;CentralAir&#x27;, &#x27;Electrical&#x27;, &#x27;KitchenQual&#x27;, &#x27;Functional&#x27;, &#x27;FireplaceQu&#x27;, &#x27;GarageType&#x27;, &#x27;GarageFinish&#x27;, &#x27;GarageQual&#x27;, &#x27;GarageCond&#x27;, &#x27;PavedDrive&#x27;, &#x27;PoolQC&#x27;, &#x27;Fence&#x27;, &#x27;MiscFeature&#x27;, &#x27;SaleType&#x27;, &#x27;SaleCondition&#x27;]</pre></div></div></div><div class=\"sk-serial\"><div class=\"sk-item\"><div class=\"sk-serial\"><div class=\"sk-item\"><div class=\"sk-estimator sk-toggleable\"><input class=\"sk-toggleable__control sk-hidden--visually\" id=\"sk-estimator-id-6\" type=\"checkbox\" ><label for=\"sk-estimator-id-6\" class=\"sk-toggleable__label sk-toggleable__label-arrow\">SimpleImputer</label><div class=\"sk-toggleable__content\"><pre>SimpleImputer(strategy=&#x27;most_frequent&#x27;)</pre></div></div></div><div class=\"sk-item\"><div class=\"sk-estimator sk-toggleable\"><input class=\"sk-toggleable__control sk-hidden--visually\" id=\"sk-estimator-id-7\" type=\"checkbox\" ><label for=\"sk-estimator-id-7\" class=\"sk-toggleable__label sk-toggleable__label-arrow\">OneHotEncoder</label><div class=\"sk-toggleable__content\"><pre>OneHotEncoder(handle_unknown=&#x27;ignore&#x27;)</pre></div></div></div></div></div></div></div></div></div></div><div class=\"sk-item\"><div class=\"sk-estimator sk-toggleable\"><input class=\"sk-toggleable__control sk-hidden--visually\" id=\"sk-estimator-id-8\" type=\"checkbox\" ><label for=\"sk-estimator-id-8\" class=\"sk-toggleable__label sk-toggleable__label-arrow\">RandomForestRegressor</label><div class=\"sk-toggleable__content\"><pre>RandomForestRegressor(random_state=1)</pre></div></div></div></div></div></div></div>"
+      ],
+      "text/plain": [
+       "Pipeline(steps=[('preprocessor',\n",
+       "                 ColumnTransformer(transformers=[('nums', SimpleImputer(),\n",
+       "                                                  ['MSSubClass', 'LotFrontage',\n",
+       "                                                   'LotArea', 'OverallQual',\n",
+       "                                                   'OverallCond', 'YearBuilt',\n",
+       "                                                   'YearRemodAdd', 'MasVnrArea',\n",
+       "                                                   'BsmtFinSF1', 'BsmtFinSF2',\n",
+       "                                                   'BsmtUnfSF', 'TotalBsmtSF',\n",
+       "                                                   '1stFlrSF', '2ndFlrSF',\n",
+       "                                                   'LowQualFinSF', 'GrLivArea',\n",
+       "                                                   'BsmtFullBath',\n",
+       "                                                   'BsmtHalfBath', 'FullBath',\n",
+       "                                                   'HalfBath', 'Be...\n",
+       "                                                   'LotConfig', 'LandSlope',\n",
+       "                                                   'Condition1', 'Condition2',\n",
+       "                                                   'BldgType', 'HouseStyle',\n",
+       "                                                   'RoofStyle', 'RoofMatl',\n",
+       "                                                   'MasVnrType', 'ExterQual',\n",
+       "                                                   'ExterCond', 'Foundation',\n",
+       "                                                   'BsmtQual', 'BsmtCond',\n",
+       "                                                   'BsmtExposure',\n",
+       "                                                   'BsmtFinType1',\n",
+       "                                                   'BsmtFinType2', 'Heating',\n",
+       "                                                   'HeatingQC', 'CentralAir',\n",
+       "                                                   'Electrical', 'KitchenQual',\n",
+       "                                                   'Functional', 'FireplaceQu', ...])])),\n",
+       "                ('MLmodel', RandomForestRegressor(random_state=1))])"
+      ]
+     },
+     "execution_count": 7,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "source": [
+    "# Final step is to use the Pipeline as a normal model fitting, predicting and doing all that stuff\n",
+    "pipe.fit(X_train, y_train)"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "b7323cf1",
+   "metadata": {
+    "papermill": {
+     "duration": 0.005692,
+     "end_time": "2026-04-07T15:08:34.270364",
+     "exception": false,
+     "start_time": "2026-04-07T15:08:34.264672",
+     "status": "completed"
+    },
+    "tags": []
+   },
+   "source": [
+    "The code yields a value around 17862 for the mean absolute error (MAE).  In the next step, you will amend the code to do better.\n",
+    "\n",
+    "# Step 1: Improve the performance\n",
+    "\n",
+    "### Part A\n",
+    "\n",
+    "Now, it's your turn!  In the code cell below, define your own preprocessing steps and random forest model.  Fill in values for the following variables:\n",
+    "- `numerical_transformer`\n",
+    "- `categorical_transformer`\n",
+    "- `model`\n",
+    "\n",
+    "To pass this part of the exercise, you need only define valid preprocessing steps and a random forest model."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 8,
+   "id": "1c9d451f",
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2026-04-07T15:08:34.283204Z",
+     "iopub.status.busy": "2026-04-07T15:08:34.282806Z",
+     "iopub.status.idle": "2026-04-07T15:08:34.294016Z",
+     "shell.execute_reply": "2026-04-07T15:08:34.292919Z"
+    },
+    "papermill": {
+     "duration": 0.019731,
+     "end_time": "2026-04-07T15:08:34.295761",
+     "exception": false,
+     "start_time": "2026-04-07T15:08:34.276030",
+     "status": "completed"
+    },
+    "tags": []
+   },
+   "outputs": [
+    {
+     "data": {
+      "application/javascript": [
+       "parent.postMessage({\"jupyterEvent\": \"custom.exercise_interaction\", \"data\": {\"outcomeType\": 1, \"valueTowardsCompletion\": 1.0, \"interactionType\": 1, \"questionType\": 2, \"questionId\": \"1.1_YourTurnModel\", \"learnToolsVersion\": \"0.3.5\", \"failureMessage\": \"\", \"exceptionClass\": \"\", \"trace\": \"\"}}, \"*\")"
+      ],
+      "text/plain": [
+       "<IPython.core.display.Javascript object>"
+      ]
+     },
+     "metadata": {},
+     "output_type": "display_data"
+    },
+    {
+     "data": {
+      "text/markdown": [
+       "<span style=\"color:#33cc33\">Correct</span>"
+      ],
+      "text/plain": [
+       "Correct"
+      ]
+     },
+     "metadata": {},
+     "output_type": "display_data"
+    }
+   ],
+   "source": [
+    "# Preprocessing for numerical data\n",
+    "numerical_transformer = SimpleImputer(strategy='median') # Your code here\n",
+    "\n",
+    "# Preprocessing for categorical data\n",
+    "categorical_transformer = Pipeline(steps=[('imputer', SimpleImputer(strategy='most_frequent')),\n",
+    "                                         ('OneHot', OneHotEncoder(handle_unknown='ignore'))\n",
+    "                                         ]) # Your code here\n",
+    "\n",
+    "# Bundle preprocessing for numerical and categorical data\n",
+    "preprocessor = ColumnTransformer(\n",
+    "    transformers=[\n",
+    "        ('num', numerical_transformer, numerical_cols),\n",
+    "        ('cat', categorical_transformer, categorical_cols)\n",
+    "    ])\n",
+    "\n",
+    "# Define model\n",
+    "model = RandomForestRegressor(random_state=1) # Your code here\n",
+    "\n",
+    "# Check your answer\n",
+    "step_1.a.check()"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 9,
+   "id": "4db0db24",
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2026-04-07T15:08:34.309277Z",
+     "iopub.status.busy": "2026-04-07T15:08:34.308922Z",
+     "iopub.status.idle": "2026-04-07T15:08:34.314035Z",
+     "shell.execute_reply": "2026-04-07T15:08:34.312824Z"
+    },
+    "papermill": {
+     "duration": 0.013657,
+     "end_time": "2026-04-07T15:08:34.315777",
+     "exception": false,
+     "start_time": "2026-04-07T15:08:34.302120",
+     "status": "completed"
+    },
+    "tags": []
+   },
+   "outputs": [],
+   "source": [
+    "# Lines below will give you a hint or solution code\n",
+    "# step_1.a.hint()\n",
+    "#step_1.a.solution()"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "cf277c2c",
+   "metadata": {
+    "papermill": {
+     "duration": 0.005778,
+     "end_time": "2026-04-07T15:08:34.328568",
+     "exception": false,
+     "start_time": "2026-04-07T15:08:34.322790",
+     "status": "completed"
+    },
+    "tags": []
+   },
+   "source": [
+    "### Part B\n",
+    "\n",
+    "Run the code cell below without changes.\n",
+    "\n",
+    "To pass this step, you need to have defined a pipeline in **Part A** that achieves lower MAE than the code above.  You're encouraged to take your time here and try out many different approaches, to see how low you can get the MAE!  (_If your code does not pass, please amend the preprocessing steps and model in Part A._)"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 10,
+   "id": "b037bd18",
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2026-04-07T15:08:34.342021Z",
+     "iopub.status.busy": "2026-04-07T15:08:34.341374Z",
+     "iopub.status.idle": "2026-04-07T15:08:37.216071Z",
+     "shell.execute_reply": "2026-04-07T15:08:37.214923Z"
+    },
+    "papermill": {
+     "duration": 2.883255,
+     "end_time": "2026-04-07T15:08:37.217603",
+     "exception": false,
+     "start_time": "2026-04-07T15:08:34.334348",
+     "status": "completed"
+    },
+    "tags": []
+   },
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "MAE: 17275.653972602744\n"
+     ]
+    },
+    {
+     "data": {
+      "application/javascript": [
+       "parent.postMessage({\"jupyterEvent\": \"custom.exercise_interaction\", \"data\": {\"outcomeType\": 1, \"valueTowardsCompletion\": 1.0, \"interactionType\": 1, \"questionType\": 2, \"questionId\": \"1.2_YourTurnPredict\", \"learnToolsVersion\": \"0.3.5\", \"failureMessage\": \"\", \"exceptionClass\": \"\", \"trace\": \"\"}}, \"*\")"
+      ],
+      "text/plain": [
+       "<IPython.core.display.Javascript object>"
+      ]
+     },
+     "metadata": {},
+     "output_type": "display_data"
+    },
+    {
+     "data": {
+      "text/markdown": [
+       "<span style=\"color:#33cc33\">Correct</span>"
+      ],
+      "text/plain": [
+       "Correct"
+      ]
+     },
+     "metadata": {},
+     "output_type": "display_data"
+    }
+   ],
+   "source": [
+    "# Bundle preprocessing and modeling code in a pipeline\n",
+    "my_pipeline = Pipeline(steps=[('preprocessor', preprocessor),\n",
+    "                              ('model', model)\n",
+    "                             ])\n",
+    "\n",
+    "# Preprocessing of training data, fit model \n",
+    "my_pipeline.fit(X_train, y_train)\n",
+    "\n",
+    "# Preprocessing of validation data, get predictions\n",
+    "preds = my_pipeline.predict(X_valid)\n",
+    "\n",
+    "# Evaluate the model\n",
+    "score = mean_absolute_error(y_valid, preds)\n",
+    "print('MAE:', score)\n",
+    "\n",
+    "# Check your answer\n",
+    "step_1.b.check()"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 11,
+   "id": "97b4bc95",
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2026-04-07T15:08:37.231702Z",
+     "iopub.status.busy": "2026-04-07T15:08:37.231399Z",
+     "iopub.status.idle": "2026-04-07T15:08:37.236572Z",
+     "shell.execute_reply": "2026-04-07T15:08:37.235528Z"
+    },
+    "papermill": {
+     "duration": 0.014293,
+     "end_time": "2026-04-07T15:08:37.238145",
+     "exception": false,
+     "start_time": "2026-04-07T15:08:37.223852",
+     "status": "completed"
+    },
+    "tags": []
+   },
+   "outputs": [],
+   "source": [
+    "# Line below will give you a hint\n",
+    "# step_1.b.hint()"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "d34d10dd",
+   "metadata": {
+    "papermill": {
+     "duration": 0.005806,
+     "end_time": "2026-04-07T15:08:37.250232",
+     "exception": false,
+     "start_time": "2026-04-07T15:08:37.244426",
+     "status": "completed"
+    },
+    "tags": []
+   },
+   "source": [
+    "# Step 2: Generate test predictions\n",
+    "\n",
+    "Now, you'll use your trained model to generate predictions with the test data."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 12,
+   "id": "49fb2edc",
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2026-04-07T15:08:37.263981Z",
+     "iopub.status.busy": "2026-04-07T15:08:37.263657Z",
+     "iopub.status.idle": "2026-04-07T15:08:37.335262Z",
+     "shell.execute_reply": "2026-04-07T15:08:37.334156Z"
+    },
+    "papermill": {
+     "duration": 0.080724,
+     "end_time": "2026-04-07T15:08:37.336939",
+     "exception": false,
+     "start_time": "2026-04-07T15:08:37.256215",
+     "status": "completed"
+    },
+    "tags": []
+   },
+   "outputs": [
+    {
+     "data": {
+      "application/javascript": [
+       "parent.postMessage({\"jupyterEvent\": \"custom.exercise_interaction\", \"data\": {\"outcomeType\": 1, \"valueTowardsCompletion\": 1.0, \"interactionType\": 1, \"questionType\": 2, \"questionId\": \"2_TestPreds\", \"learnToolsVersion\": \"0.3.5\", \"failureMessage\": \"\", \"exceptionClass\": \"\", \"trace\": \"\"}}, \"*\")"
+      ],
+      "text/plain": [
+       "<IPython.core.display.Javascript object>"
+      ]
+     },
+     "metadata": {},
+     "output_type": "display_data"
+    },
+    {
+     "data": {
+      "text/markdown": [
+       "<span style=\"color:#33cc33\">Correct</span>"
+      ],
+      "text/plain": [
+       "Correct"
+      ]
+     },
+     "metadata": {},
+     "output_type": "display_data"
+    }
+   ],
+   "source": [
+    "# Preprocessing of test data, fit model\n",
+    "preds_test = my_pipeline.predict(X_test) # Your code here\n",
+    "\n",
+    "# Check your answer\n",
+    "step_2.check()"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 13,
+   "id": "3a85a2ef",
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2026-04-07T15:08:37.351177Z",
+     "iopub.status.busy": "2026-04-07T15:08:37.350842Z",
+     "iopub.status.idle": "2026-04-07T15:08:37.355736Z",
+     "shell.execute_reply": "2026-04-07T15:08:37.354577Z"
+    },
+    "papermill": {
+     "duration": 0.013651,
+     "end_time": "2026-04-07T15:08:37.357346",
+     "exception": false,
+     "start_time": "2026-04-07T15:08:37.343695",
+     "status": "completed"
+    },
+    "tags": []
+   },
+   "outputs": [],
+   "source": [
+    "# Lines below will give you a hint or solution code\n",
+    "# step_2.hint()\n",
+    "# step_2.solution()"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "4daa30ac",
+   "metadata": {
+    "papermill": {
+     "duration": 0.006289,
+     "end_time": "2026-04-07T15:08:37.371958",
+     "exception": false,
+     "start_time": "2026-04-07T15:08:37.365669",
+     "status": "completed"
+    },
+    "tags": []
+   },
+   "source": [
+    "Run the next code cell without changes to save your results to a CSV file that can be submitted directly to the competition."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 14,
+   "id": "9af4599d",
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2026-04-07T15:08:37.386293Z",
+     "iopub.status.busy": "2026-04-07T15:08:37.385920Z",
+     "iopub.status.idle": "2026-04-07T15:08:37.400591Z",
+     "shell.execute_reply": "2026-04-07T15:08:37.399424Z"
+    },
+    "papermill": {
+     "duration": 0.024135,
+     "end_time": "2026-04-07T15:08:37.402467",
+     "exception": false,
+     "start_time": "2026-04-07T15:08:37.378332",
+     "status": "completed"
+    },
+    "tags": []
+   },
+   "outputs": [],
+   "source": [
+    "# Save test predictions to file\n",
+    "output = pd.DataFrame({'Id': X_test.index,\n",
+    "                       'SalePrice': preds_test})\n",
+    "output.to_csv('submission.csv', index=False)"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "d25be367",
+   "metadata": {
+    "papermill": {
+     "duration": 0.006498,
+     "end_time": "2026-04-07T15:08:37.415608",
+     "exception": false,
+     "start_time": "2026-04-07T15:08:37.409110",
+     "status": "completed"
+    },
+    "tags": []
+   },
+   "source": [
+    "# Submit your results\n",
+    "\n",
+    "Once you have successfully completed Step 2, you're ready to submit your results to the leaderboard!  If you choose to do so, make sure that you have already joined the competition by clicking on the **Join Competition** button at [this link](https://www.kaggle.com/c/home-data-for-ml-course).  \n",
+    "1. Begin by clicking on the **Save Version** button in the top right corner of the window.  This will generate a pop-up window.  \n",
+    "2. Ensure that the **Save and Run All** option is selected, and then click on the **Save** button.\n",
+    "3. This generates a window in the bottom left corner of the notebook.  After it has finished running, click on the number to the right of the **Save Version** button.  This pulls up a list of versions on the right of the screen.  Click on the ellipsis **(...)** to the right of the most recent version, and select **Open in Viewer**.  This brings you into view mode of the same page. You will need to scroll down to get back to these instructions.\n",
+    "4. Click on the **Data** tab near the top of the screen.  Then, click on the file you would like to submit, and click on the **Submit** button to submit your results to the leaderboard.\n",
+    "\n",
+    "You have now successfully submitted to the competition!\n",
+    "\n",
+    "If you want to keep working to improve your performance, select the **Edit** button in the top right of the screen. Then you can change your code and repeat the process. There's a lot of room to improve, and you will climb up the leaderboard as you work.\n",
+    "\n",
+    "\n",
+    "# Keep going\n",
+    "\n",
+    "Move on to learn about [**cross-validation**](https://www.kaggle.com/alexisbcook/cross-validation), a technique you can use to obtain more accurate estimates of model performance!"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "84517a6a",
+   "metadata": {
+    "papermill": {
+     "duration": 0.006348,
+     "end_time": "2026-04-07T15:08:37.428346",
+     "exception": false,
+     "start_time": "2026-04-07T15:08:37.421998",
+     "status": "completed"
+    },
+    "tags": []
+   },
+   "source": [
+    "---\n",
+    "\n",
+    "\n",
+    "\n",
+    "\n",
+    "*Have questions or comments? Visit the [course discussion forum](https://www.kaggle.com/learn/intermediate-machine-learning/discussion) to chat with other learners.*"
+   ]
+  }
+ ],
+ "metadata": {
+  "kaggle": {
+   "accelerator": "none",
+   "dataSources": [
+    {
+     "databundleVersionId": 111096,
+     "sourceId": 10211,
+     "sourceType": "competition"
+    }
+   ],
+   "dockerImageVersionId": 31153,
+   "isGpuEnabled": false,
+   "isInternetEnabled": false,
+   "language": "python",
+   "sourceType": "notebook"
+  },
+  "kernelspec": {
+   "display_name": "Python 3",
+   "language": "python",
+   "name": "python3"
+  },
+  "language_info": {
+   "codemirror_mode": {
+    "name": "ipython",
+    "version": 3
+   },
+   "file_extension": ".py",
+   "mimetype": "text/x-python",
+   "name": "python",
+   "nbconvert_exporter": "python",
+   "pygments_lexer": "ipython3",
+   "version": "3.11.13"
+  },
+  "papermill": {
+   "default_parameters": {},
+   "duration": 19.270497,
+   "end_time": "2026-04-07T15:08:38.056177",
+   "environment_variables": {},
+   "exception": null,
+   "input_path": "__notebook__.ipynb",
+   "output_path": "__notebook__.ipynb",
+   "parameters": {},
+   "start_time": "2026-04-07T15:08:18.785680",
+   "version": "2.6.0"
+  }
+ },
+ "nbformat": 4,
+ "nbformat_minor": 5
+}
