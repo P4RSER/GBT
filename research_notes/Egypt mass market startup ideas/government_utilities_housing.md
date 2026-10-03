@@ -2,7 +2,7 @@
 
 > **How this was researched (read first).** I ran 18 web searches (Arabic and English) before the search cap for the whole session ran out (200 of 200 calls, shared with the parallel researchers). WebFetch was blocked by the network egress policy for every domain I tried: gate.ahram.org.eg, english.ahram.org.eg, masrawy.com, youm7.com, dostor.org, maspero.eg, amwalalghad.com, egyptindependent.com, egypttoday.com, egyptianstreets.com, al-ain.com, arabfinance.com, meatechwatch.com and digital.gov.eg. Reddit could not be fetched either. **As a result, every finding below comes from the search engine's summaries of the linked pages. I could not open any page to check wording, context or date.** Where one summary drew on several pages, I cite all the candidate pages. Many Arabic news sites (Parlmany, Al Bawaba News, Banker.news) put the *crawl* date in the page title. Where the URL or ID sequence gives an article date, I use that; otherwise the date is marked as unconfirmed.
 >
-> **Coverage:** government services and utilities are reasonably covered. Renting is covered **only for the old-rent law**. **Buying property, building management and home services have no verified 2024–2026 findings.** For those, I list unverified background leads (clearly labelled) for a follow-up pass. I excluded non-Egyptian results that matched Arabic queries: Kuwait's Al-Jarida notarization decrees, Morocco's Hespress, Saudi Okaz/Alyaum/Amlak, UAE Dubicars, India's eSahayak and UK SystemDay.
+> **Coverage:** government services and utilities are reasonably covered. Renting is covered **only for the old-rent law**. **Buying property, building management and home services have no verified 2024–2026 findings.** For those, I list unverified background leads (clearly labelled) for a follow-up pass. The final section, **"Latent and predicted pain points"**, was added at the coordinator's request. It catalogues 28 normalized, coping-implied and change-driven frictions, each labelled [Documented], [Inferred] or [Inferred, predicted], with reasoning, evidence and reach estimates. It draws only on the evidence above plus clearly marked unverified background, because no further searching was possible. I excluded non-Egyptian results that matched Arabic queries: Kuwait's Al-Jarida notarization decrees, Morocco's Hespress, Saudi Okaz/Alyaum/Amlak, UAE Dubicars, India's eSahayak and UK SystemDay.
 
 ## 1. Government services and documents: volumes, state of digitization, remaining pain, expediters (معقب) and startups
 
@@ -280,3 +280,246 @@ Further synthesis:
 - No willingness-to-pay data was found for any of these pain points.
 - No direct user complaint mining was possible (app reviews, Reddit, Facebook groups) because fetches were blocked. This should be the first validation step.
 - **Housing purchase, building management and home services need a dedicated follow-up research pass** once the search budget is raised. They are the weakest-evidenced parts of these notes.
+
+## Latent and predicted pain points
+
+### Takeaway
+Beyond the problems officials and the media already discuss, the largest hidden frictions in this domain come from three sources:
+1. **Coping layers people have normalized.** These include re-collecting the same paper documents for every agency, and paying intermediaries: the معقب, the سمسار, the doorman (بواب), and a new "digital معقب" at cyber cafés and phone shops. Building money is run through WhatsApp groups and a treasurer's notebook.
+2. **"Black-box" household costs.** Households cannot see the logic behind prepaid meters, tiered tariffs, estimated bills and internet quotas.
+3. **Shocks from 2025–2026 changes**, each of which creates a new wave of friction:
+   - the old-rent transition;
+   - the July-2026 tariff change;
+   - the Sept-2026 photo-billing reform, which will likely produce catch-up bills;
+   - coded-meter repricing;
+   - telecom price rises;
+   - government services that are only available online.
+
+Most items below are **inferred** (reasoned from coping behavior and documented changes) rather than measured. Reach estimates are order-of-magnitude and should be validated with quick surveys or interviews. Facts marked "unverified background" come from model knowledge and were not confirmed in this session.
+
+### Cited Findings
+These are the evidence anchors used in the catalogue below (all already cited in §1–§3).
+- 1.3M computerized birth certificates, 1.2M national IDs and 110k death certificates issued in one 30-day period (year unconfirmed) — [Mobtada](https://www.mobtada.com/egypt/697564/بالأرقام-جهود-قطاع-الأحوال-المدنية-خلال-30-يوما)
+- Digital Egypt had 10.4M users in 2025 (8.1M in 2024) and 23.8M transactions in 2025 — [MEA Tech Watch](https://meatechwatch.com/2025/12/04/digital-egypt-platform-sees-major-expansion-in-services-and-users-in-2025/); 73 services are available only on the platform — [Akhbar El Yom](https://m.akhbarelyom.com/news/newdetails/4843335/1/في-ذكرى-30-يونيو-إتاحة-73-خدمة-حصرية-على/amp)
+- The online criminal-record certificate requires electronic payment (about EGP 75 regular) — [Al Dostor](https://www.dostor.org/5249394)
+- Shahr Aqari now texts the principal on every transaction made under their power of attorney — [El Watan](https://www.elwatannews.com/news/details/7636221)
+- About 64M ration beneficiaries; ongoing deletions ("before your name is deleted…") — [Parlmany](https://www.parlmany.com/News/7/152946/%D9%82%D8%A8%D9%84-%D8%AD%D8%B0%D9%81-%D8%A7%D8%B3%D9%85%D9%83-%D8%A7%D8%B9%D8%B1%D9%81-%D8%AD%D9%82%D9%83-%D9%81%D9%89-%D8%A7%D9%84%D8%AA%D9%85%D9%88%D9%8A%D9%86); [Sada El Balad](https://www.elbalad.news/6900325)
+- 22.9M prepaid electricity meters (30 Jun 2026) — [Amwal Al Ghad](https://amwalalghad.com/xnqy). A plan to replace 40M traditional meters — [Parlmany](https://www.parlmany.com/News/10/123460/الكهرباء-استبدال-40-مليون-عداد-تقليدى-بـ-مسبوق-الدفع-فى)
+- No bill may be issued without a real meter photo; an outsourced firm photographs meters (Sept 2026) — [Banker.news](https://banker.news/151244)
+- Coded meters are billed at a flat EGP 2.74/kWh, with parliamentary pushback (June 2026) and a Senate call for an extra year to reconcile — [Al Dostor](https://www.dostor.org/5518618); [Masrawy](https://www.masrawy.com/news/news_egypt/details/2026/6/15/3003266/غد-ا-مجلس-النواب-يناقش-طلب-إحاطة-بشأن-تسعير-العدادات-الكودية-الموحدة); [Egypt Telegraph](https://www.egypttelegraph.com/article/251367/الشيوخ-يوصي-بمنح-أصحاب-العدادات-الكودية-سنة)
+- Early-2026 official denial of a household tariff rise — [Arab Finance](https://arabfinance.com/en/news/newdetails/egypt-says-no-summer-power-cuts-and-denies-household-tariff-increase). A July-2026 increase followed and was reported inconsistently — [Egypt Telegraph](https://www.egypttelegraph.com/article/266185/أسعار-شرائح-الكهرباء-الجديدة-2026-زيادة-12); [Al-Ain](https://al-ain.com/article/electricity-prices-in-egypt-increase-2026-tariff)
+- Gas readings must be self-reported by the 27th; recurring "last chance" news items — [Al-Ahram Gate](https://gate.ahram.org.eg/News/5259041.aspx); [Akhbar El Yom](https://akhbarelyom.com/news/newdetails/4827219/1/الفرصة-الأخيرة-خطوات-تسجيل-قراءة-عداد-ال)
+- Water meter readings can be sent via WhatsApp — [Youm7, 2022](https://www.youm7.com/story/2022/1/20/ما-تنتظرش-المحصل-شركات-المياه-تواكب-التطور-التكنولوجى-وتعلن-عن/5625549). Outage schedules are posted on a portal — [El Watan](https://www.elwatannews.com/news/details/4999680). In 2019 the water company was installing 7M upgraded meters and 360k prepaid meters — [Masrawy, 2019](https://www.masrawy.com/news/news_egypt/details/2019/12/24/1693832/رئيس-القابضة-للمياه-تركيب-7-ملايين-عداد-مطور-وتوريد-360-ألف-عداد-مسبق)
+- Telecom price rises of 17–30% (late 2024) and 9–15% (May 2026); complaints about quotas — [Masaar](https://masaar.net/en/the-right-to-connectivity-under-price-pressures/); [Zawia3](https://zawia3.com/en/internet-speed/). 13.13M fixed broadband subscriptions (May 2026) — [Ahram Online](https://english.ahram.org.eg/News/575154.aspx)
+- Old rent: 1.8M households (~6M people), 82% in Cairo, Giza, Alexandria and Qalyubia; 35% pay under EGP 50; residential contracts end after 7 years — [Al-Ahram Gate](https://gate.ahram.org.eg/News/5240877.aspx). A state-unit route for tenants — [Masrawy, May 2025](https://www.masrawy.com/news/news_egypt/details/2025/5/7/2783250/خطوات-حصول-المستأجر-على-شقة-تمليك-أو-إيجار-بعد-تعديلات-الإيجار-القديم-)
+- Load-shedding in 2023–24 was ended with $1.18bn of energy imports (Jun 2024) — [Egyptian Streets](https://egyptianstreets.com/2024/06/25/egypt-to-import-1-18-billion-in-energy-to-end-summer-power-cuts/). 2026 conservation measures include remote work on Sundays for government offices — [Arab Finance](https://arabfinance.com/en/news/newdetails/egypt-says-no-summer-power-cuts-and-denies-household-tariff-increase)
+- Paid document-concierge services have existed since 2013 (Les Concierges / Govcoo, 200k clients in Greater Cairo) — [Gust](https://gust.com/companies/Govcoo)
+
+### Inferences
+This is the catalogue of latent and predicted pain points, grouped by domain and ordered roughly by reach × severity × how well software can address it.
+
+Labels:
+- **[Documented]**: the problem itself is reported by a source.
+- **[Inferred]**: reasoned from coping behavior or adjacent evidence.
+- **[Inferred, predicted]**: expected to emerge from a recent or upcoming change.
+
+Reach anchors that are **unverified background**: population about 108M; adults about 65–70M; households about 27–28M; about 2M births, about 0.9M marriages and about 0.5–0.7M deaths per year; about 14M Egyptians abroad.
+
+**A. Government services and paperwork**
+
+1. **[Inferred, strongly supported] Re-collecting the same documents for every agency.**
+   - *Reasoning:* each agency (schools, passport office, ration office, employer, bank) wants a freshly issued computerized copy plus paper ID photocopies. It does not reuse records the state already holds.
+   - *Evidence:* 1.3M computerized birth certificates were issued in one month, about 15M a year if typical. That is far above about 2M births a year, so most issuance must be repeat copies (Mobtada).
+   - *Reach:* about 10–15M birth-certificate requests a year alone; most families with school-age children.
+   - *Software angle:* a family document vault, plus a checker for "which document, how recent", pre-filled requests and delivery.
+
+2. **[Inferred] Expiry blindness.**
+   - *Reasoning:* people discover an expired ID, driving or car license, or passport only when they are blocked (bank or e-wallet identity checks, a traffic stop, travel). That forces rushed trips, urgent fees or fines.
+   - *Evidence:* about 1.2M IDs issued in one month, roughly 14M a year (Mobtada). No consumer reminder service turned up in this research.
+   - *Reach:* virtually all adults. With 7-year ID validity (unverified background), about 9–10M ID renewals a year, plus licenses.
+   - *Software angle:* scan once, get reminders, then book or renew with delivery. A low-cost acquisition hook for a vault or concierge.
+
+3. **[Inferred] "Requirements roulette" and repeat trips.**
+   - *Reasoning:* requirements and fees differ by office and clerk and change often. People rely on relatives, Facebook groups or the معقب at the office door, and one missing paper means another day off work.
+   - *Evidence:* repeated demand for navigation products (the Enkzni app; Govcoo and Baseta concierges; a 2026 UN Women navigator for startups — [UN Women](https://egypt.unwomen.org/en/digital-library/publications/2026/04/government-services-and-legal-navigator-for-startups)). Frequent rule changes (the Shahr Aqari SMS rule; ration-card deletions).
+   - *Reach:* tens of millions of procedures a year (from items 1–2).
+   - *Software angle:* office-level guides in Egyptian Arabic, verified by recent visitors ("what did the Nasr City registry ask for last week?"), with AI Q&A. Revenue from premium human handling and B2B.
+
+4. **[Inferred, predicted] The new "digital معقب".**
+   - *Reasoning:* more services are now platform-only and require e-payment. People without smartphones, bank or wallet cards, or digital skills pay cyber cafés, phone shops or relatives to file for them, handing over national ID data and passwords. Paperwork brokerage has moved online rather than disappeared.
+   - *Evidence:* 73 platform-exclusive services (Akhbar El Yom). Only about 10.4–10.7M users in 2025, roughly 10% of the population (MEA Tech Watch). The online فيش requires e-payment (Al Dostor).
+   - *Reach:* plausibly tens of millions of adults cannot use the platform unassisted, inferred from about 10% penetration. The elderly, rural and low-literacy groups are hit hardest, especially outside Greater Cairo and Alexandria.
+   - *Software angle:* an assisted-digital agent network (Fawry-style agents for government e-services) and voice-guided Arabic flows, paid per assisted transaction. Data-protection risk must be designed for.
+
+5. **[Inferred, partly documented] ID-copy misuse and power-of-attorney fraud.**
+   - *Reasoning:* paper ID photocopies are handed to SIM sellers, landlords, employers and shops. Powers of attorney (توكيلات) can be abused, and victims find out late.
+   - *Evidence:* Shahr Aqari introduced SMS alerts to principals for every transaction under their POA, an official response to misuse (El Watan).
+   - *Reach:* all adults who hand out ID copies (about 65–70M, unverified). POA volume is unknown.
+   - *Software angle:* a personal "identity watch": a register of active POAs and how to revoke them, an ID-photocopy watermark ("for X use only, date"), and a fraud-response checklist. Low revenue, but a strong acquisition hook.
+
+6. **[Inferred] The death-admin cascade.**
+   - *Reasoning:* after a death, families must chain several steps while grieving, often with heirs abroad:
+     - death certificates;
+     - inheritance determination (إعلام وراثة);
+     - pension and social-insurance transfers;
+     - banks;
+     - Shahr Aqari;
+     - car transfer;
+     - utility accounts and ration-card updates.
+   - *Evidence:* 110k death certificates issued in one month (Mobtada) suggests several copies are needed per death. Utility accounts left in deceased owners' names link to item 15.
+   - *Reach:* about 0.5–0.7M deaths a year (unverified), so several million family members a year are involved.
+   - *Software angle:* a guided "after a death" checklist, a document pack and paid handling. Willingness to pay is likely higher than for routine errands. Possible B2B partners: funeral services, banks.
+
+7. **[Inferred] Life-event cascades: marriage, new baby, moving.**
+   - *Reasoning:* each event triggers 4–8 separate updates: ID marital status or address, birth registration, adding to or splitting the ration card, utility contracts, school-district enrollment.
+   - *Evidence:* the volumes in items 1–2; the ration system covers about 64M people.
+   - *Reach:* about 0.9M marriages and about 2M births a year (unverified), plus moves.
+   - *Software angle:* life-event bundles inside the navigator.
+
+8. **[Documented + inferred] Silent loss of ration subsidies.**
+   - *Reasoning:* periodic eligibility clean-ups and targeted grants mean a household can be dropped or miss a grant without noticing until it reaches the grocer.
+   - *Evidence:* the "Before your name is deleted, know your rights" headline (Parlmany). Grants targeted to subsets (about 10M cards; more than 37M citizens).
+   - *Reach:* about 64M beneficiaries (attribution unconfirmed).
+   - *Software angle:* a status check, alerts and an appeal guide. A feature rather than a business, because willingness to pay is low.
+
+9. **[Inferred] The proxy problem for Egyptians abroad.**
+   - *Reasoning:* expatriates run home-country procedures through relatives and consulate powers of attorney. These include property, inheritance, parents' old-rent units and renewals, and they suffer long delays and family friction.
+   - *Evidence:* none gathered this session. The diaspora size is unverified background.
+   - *Reach:* millions of diaspora households and their relatives in Egypt.
+   - *Software angle:* a diaspora concierge priced in foreign currency, which likely has the highest willingness to pay in this domain.
+
+**B. Utilities**
+
+10. **[Inferred] The prepaid-meter "black box".**
+    - *Reasoning:* households cannot see consumption or tier in real time. Recharges seem to "disappear" because of automatic deductions for arrears or fees collected through the meter (mechanism unverified). People learn the balance is low only when the power goes off, often at night or on holidays when kiosks are shut.
+    - *Evidence:* 22.9M prepaid meters (Amwal Al Ghad). Existing apps cover top-up only (Masrawy).
+    - *Reach:* 22.9M meters, so most likely tens of millions of people.
+    - *Software angle:* a meter-photo diary with OCR, a "days left" forecast, a deductions explainer and alerts.
+
+11. **[Inferred, predicted] Catch-up bill shock from photo-based billing.**
+    - *Reasoning:* the Sept-2026 rule requiring a real meter photo for each bill replaces years of estimates with actual readings. Under-estimated accounts will get large catch-up bills. If the accumulated use is billed in a single month, it can push the household into higher tiers. Meters inside locked flats will create disputes over missed or wrong photos.
+    - *Evidence:* the photo-billing reform with outsourced readers (Banker.news).
+    - *Reach:* postpaid household customers, plausibly 15M+ meters. This is an inference from the 40M-meter replacement plan minus 22.9M prepaid meters.
+    - *Software angle:* a bill-versus-photo checker, a complaint generator and a guide to requesting installments.
+
+12. **[Documented + inferred] Tariff opacity and policy whiplash.**
+    - *Reasoning:* households cannot budget because tariff changes arrive with conflicting reports, right after official denials.
+    - *Evidence:* an early-2026 denial (Arab Finance), then a July-2026 increase reported as both "12% average except the first tier" and "only the >1,000 kWh tier" (Egypt Telegraph; Al-Ain).
+    - *Reach:* all households on tiered tariffs.
+    - *Software angle:* a neutral tariff calculator tied to the user's own readings, with a forecast of the next bill or top-up.
+
+13. **[Inferred] Summer tier creep from air conditioning.**
+    - *Reasoning:* summer AC use pushes households into costlier tiers. Heat and higher prices raise the share of income spent on electricity, and families cannot see which month or appliance tips them over.
+    - *Evidence:* the 2026 grid conservation push (Arab Finance); the July-2026 tariff change.
+    - *Reach:* AC-owning households (count unknown; higher in Greater Cairo, Alexandria and Upper Egypt's hot cities).
+    - *Software angle:* seasonal budgeting, usage tips, and lead generation for efficient ACs and solar.
+
+14. **[Documented + inferred] The coded-meter collective-action trap.**
+    - *Reasoning:* households in unlicensed buildings pay a flat EGP 2.74/kWh until the building is regularized. Regularizing needs coordinated documents and fees from every owner in the building, so individual households stay stuck at the higher price.
+    - *Evidence:* the flat rate and parliamentary debate (Al Dostor; Masrawy, June 2026); the Senate's call for an extension (Egypt Telegraph).
+    - *Reach:* the number of coded meters is unknown, likely millions of people (unverified). It is concentrated in informal and peri-urban areas and the governorates.
+    - *Software angle:* a building-level reconciliation coordinator that collects documents and fees, tracks the application and connects the building to engineering offices.
+
+15. **[Inferred] Tenants trapped by meters in someone else's name.**
+    - *Reasoning:* renters usually cannot move meters into their own names without ownership papers. Previous occupants' arrears and deductions land on them, landlords control billing, and many accounts stay in deceased owners' names.
+    - *Evidence:* none gathered (mechanism unverified).
+    - *Reach:* urban renters (count unknown, likely millions).
+    - *Software angle:* a move-in/move-out utility handover with time-stamped meter photos, also useful to landlords.
+
+16. **[Inferred] Shared meters and equal-split disputes.**
+    - *Reasoning:* many older buildings and family houses (بيت العيلة) share one water or electricity meter. The owner or doorman splits the bill equally regardless of household size, and pump and stair-light electricity is shared informally, which breeds resentment.
+    - *Evidence:* indirect only. The water company's long-running replacement of meters with upgraded and prepaid units (Masrawy, 2019) suggests a legacy of shared metering.
+    - *Reach:* unknown; likely common in older urban buildings and rural family houses.
+    - *Software angle:* a fair-split calculator inside a building-wallet app.
+
+17. **[Documented + inferred] Monthly self-reading chores and missed deadlines.**
+    - *Reasoning:* each utility has its own reading channel and deadline. Gas must be reported by the 27th and water readings go via WhatsApp. Missed readings mean estimated bills and later corrections.
+    - *Evidence:* the Petrotrade deadline and its 15 channels (Al-Ahram Gate); recurring "last chance" stories (Akhbar El Yom); WhatsApp water readings (Youm7).
+    - *Reach:* gas-connected households (about 14–15M, unverified) plus water self-readers.
+    - *Software angle:* one reminder, plus photo capture that prepares or submits the reading to each utility.
+
+18. **[Documented + inferred] Internet quota rationing.**
+    - *Reasoning:* after the late-2024 and May-2026 price rises, households ration use, buy add-ons mid-month, downgrade packages, and cannot see which device or family member is using the quota.
+    - *Evidence:* Masaar; Zawia3; Egypt Today.
+    - *Reach:* 13.13M fixed broadband subscriptions (May 2026), i.e. roughly half of households, plus heavy mobile-data users.
+    - *Software angle:* a quota forecast and package optimizer. Per-device visibility needs router integration and is harder.
+
+19. **[Inferred, predicted] The outage information vacuum.**
+    - *Reasoning:* water cuts, and power cuts if load-shedding ever returns, are announced on portals or social media rather than pushed by area. Households learn too late to fill tanks or charge devices. Load-shedding left backup-power habits (UPS units, rechargeable fans) and lingering anxiety. The 2026 conservation measures show the grid is still tight.
+    - *Evidence:* water outage schedules on a portal (El Watan); the 2023–24 load-shedding and its end (Egyptian Streets; The New Arab); 2026 conservation measures (Arab Finance).
+    - *Reach:* water cuts are frequent in hot months for upper floors and newer extension areas (unverified). Power-cut alerts would affect everyone if cuts return.
+    - *Software angle:* area-based alerts mixing official and crowd reports. Low monetization unless bundled.
+
+**C. Housing: renting, buying, buildings, home services**
+
+20. **[Inferred, predicted] Accidental landlords created by old rent.**
+    - *Reasoning:* owners of about 1.8M old-rent units are often elderly heirs with fragmented shares (ورثة). They must now collect much higher rents, prove payment and issue notices. As units return through about 2032, they must renovate, re-let or sell, and heirs must agree on each decision.
+    - *Evidence:* 1.8M households; residential contracts end after 7 years; 35% previously paid under EGP 50 (Al-Ahram Gate).
+    - *Reach:* owners and heirs, likely hundreds of thousands to over a million people, concentrated in Cairo, Giza, Alexandria and Qalyubia.
+    - *Software angle:* a landlord toolkit: rent ledger, digital receipts, legal notices, a shared ledger for co-heirs, and re-letting and listing.
+
+21. **[Inferred, predicted] Old-rent tenants' payment-proof and relocation stress.**
+    - *Reasoning:* tenants facing multiples of their old rent need proof of payment to defend against eviction claims. They also need help weighing state alternatives and planning a move, and many are elderly.
+    - *Evidence:* 1.8M households (~6M people), 82% in four governorates (Al-Ahram Gate); the state-unit route (Masrawy, May 2025).
+    - *Reach:* 1.8M households now, with relocation peaking around 2032.
+    - *Software angle:* an archive of payment receipts (e.g., InstaPay), a deadline tracker and a relocation planner. Willingness to pay is low, so partner with NGOs or the state, or monetize through movers and new-rental referrals.
+
+22. **[Inferred] Broker gatekeeping and bait listings.**
+    - *Reasoning:* renters often must go through a سمسار or the building's doorman, who charge a commission (about a month's rent; unverified). Unavailable flats are used as bait, so seekers waste visits.
+    - *Evidence:* none gathered this session; the brief itself flags trust issues.
+    - *Reach:* urban renters (count unknown, likely millions in Greater Cairo and Alexandria).
+    - *Software angle:* verified, availability-confirmed listings with video walk-throughs and a fixed fee below a broker's.
+
+23. **[Inferred] Informal leases leave tenants without proof of residence.**
+    - *Reasoning:* unregistered leases, plus meters and bills in the landlord's name, mean tenants struggle to prove their address. That matters for ID address updates, school districts and official mail, so many IDs show outdated addresses.
+    - *Evidence:* none gathered (ID address-change rules unverified).
+    - *Reach:* renters and people living in family-owned units (count unknown).
+    - *Software angle:* a standard digital lease plus a printable receipt history.
+
+24. **[Inferred] The building treasury in a notebook.**
+    - *Reasoning:* shared costs (elevator, doorman, cleaning, water pump, stair lights, roof tank) are collected in cash by a volunteer treasurer who records them in a notebook or a WhatsApp group. Free-riders are common (e.g., ground-floor residents refusing elevator costs), suspicion about spending is common, and formal occupants' unions are rarely used.
+    - *Evidence:* none gathered (unverified); the coded-meter issue shows building-level coordination problems.
+    - *Reach:* likely most apartment households in Greater Cairo and Alexandria (unverified).
+    - *Software angle:* a building wallet: dues collection, a transparent ledger with receipts, polls, and a vendor marketplace.
+
+25. **[Inferred] The technician lottery, mediated by the doorman.**
+    - *Reasoning:* there are no standard prices and no warranty. Faults get "inflated," repeat visits are common, and people depend on the doorman's or a neighbor's referral, which may carry hidden commissions. Summer creates an AC-servicing crunch.
+    - *Evidence:* none gathered.
+    - *Reach:* nearly every household, several times a year.
+    - *Software angle:* price guides, verified pros with ratings from the neighborhood, and a short warranty. Could be an add-on to the bills or building apps.
+
+26. **[Inferred, predicted] Moving-day chaos.**
+    - *Reasoning:* moves rely on informal trucks and day laborers, with no fixed quote or insurance. Demand should rise with old-rent relocations and moves to new cities.
+    - *Evidence:* the old-rent transition (Al-Ahram Gate).
+    - *Reach:* hundreds of thousands of moves a year (unknown).
+    - *Software angle:* a fixed-quote moving marketplace, cross-sold from the rental and landlord tools.
+
+27. **[Inferred] Paper-chain property ownership.**
+    - *Reasoning:* much property is not formally registered (unverified background). Buyers therefore rely on chains of preliminary contracts, signature-validation lawsuits (صحة توقيع) and powers of attorney, and fear double sales or forged POAs.
+    - *Evidence:* the Shahr Aqari SMS anti-fraud measure (El Watan).
+    - *Reach:* most resale buyers (volume unknown).
+    - *Software angle:* a title-chain checklist plus a vetted-lawyer marketplace. High regulatory complexity.
+
+28. **[Inferred, predicted] Scams riding on digitization.**
+    - *Reasoning:* the rapid shift to online government and utility payments invites fake "Digital Egypt", utility and ration pages and WhatsApp messages harvesting ID numbers and card details. Fake rental listings ask for deposits up front.
+    - *Evidence:* indirect only, from the growth in online transactions (23.8M in 2025; MEA Tech Watch).
+    - *Reach:* all online users.
+    - *Software angle:* an official-link and number verifier inside the navigator or bills app.
+
+**Which latent pain points look most promising for a startup** (my synthesis):
+1. The prepaid black box, catch-up bills and tariff opacity (items 10–12, 17) → a home bills copilot. It has documented mass reach and a monthly cadence, and needs little operations.
+2. Document re-collection, expiry blindness and requirements roulette (items 1–3, 7) → a navigator plus document vault, with paid handling as an upsell.
+3. The digital معقب (item 4) → an assisted-digital agent network for people who can't self-serve. This could become the biggest inclusive market as services move online-only.
+4. The death-admin cascade and the diaspora proxy (items 6, 9) → high-willingness-to-pay concierge niches within a mass-market need.
+5. Accidental old-rent landlords and the building treasury (items 20, 24) → a landlord or building ledger. Evidence is weaker, but these are well timed to the old-rent law.
+
+### Gaps
+- None of the inferred pain points has been measured. Missing data includes:
+  - how often people make repeat trips;
+  - share of households hit by catch-up bills;
+  - number of coded and shared meters;
+  - number of renters and their broker spending;
+  - how common building treasurers and WhatsApp groups are;
+  - how many people pay a "digital معقب".
+- The quickest validation would be a 200–500-respondent online and street survey in Greater Cairo plus one Delta and one Upper Egypt governorate, plus app-store review mining for the Kahraba, Sahl, MyFawry, Digital Egypt, Petrotrade and WE apps. Review mining was not possible in this session because fetches were blocked.
+- The reach anchors (population, households, births, marriages, deaths, diaspora, gas connections, ID validity) are **unverified background** and should be checked against CAPMAS before being quoted.
