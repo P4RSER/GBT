@@ -362,3 +362,240 @@ Additional inferences:
 - Regulatory constraints were not researched: CBE payment-licensing rules, FRA rules on credit referrals or lead generation, and data-protection obligations for apps that parse SMS. UNVERIFIED LEAD: Egypt's Personal Data Protection Law No. 151 of 2020 would apply to apps processing financial SMS data. Check its executive regulations and enforcement status.
 - No app-store review mining (complaint themes) was possible because Google Play was blocked.
 - The size of shop-credit (آجل) practice among small retailers is unquantified.
+
+## Latent and predicted pain points
+
+### Takeaway
+Beyond the documented problems, the largest latent pains in Egyptian household finance come from two places.
+- **How people cope:**
+  - Informal savings circles and unrecorded family loans.
+  - Paper tabs at the neighborhood grocer.
+  - Relying on relatives or kiosk agents to pay.
+  - Cash-only spending.
+- **Recent changes:**
+  - Instant payments and the fraud patterns that come with them.
+  - InstaPay fees.
+  - Stepwise energy-price hikes.
+  - A shifting savings-rate environment.
+  - A wave of new "fractional" investment products.
+
+By scale and fit for a small software team, the top three clusters are:
+1. **Family mode**: delegated payments, protection for elderly relatives, and purpose-specific money from relatives abroad.
+2. **Informal-finance ledgers** that make the hidden inflation cost of gam'eya slots and family loans visible.
+3. **A hidden-cost x-ray** covering installment stacking, silent fees and losses on gold resale.
+
+Most items are **inferred**: reasoned from cited scale data and observed coping behavior. A few are **documented**. People-affected figures are order-of-magnitude estimates, with derivations and assumptions shown.
+
+### Base numbers used for estimates
+- 70.5M adults aged 15+, of whom 54.7M have an active account. That leaves **about 15.8M adults with no active financial account** at end-2025 (derived) — [Business Today Egypt](https://www.businesstodayegypt.com/amp/1/7152/Egypt-s-financial-inclusion-rate-hits-77-6-by-2025)
+- 46.3M active mobile wallets; 717.7M wallet transactions in Q2 2025 — [MEA Tech Watch](https://meatechwatch.com/2025/09/16/egypts-mobile-wallet-transactions-surge-72-in-q2-2025-to-egp-943-4-billion/)
+- 11.5M InstaPay users (November 2024) — [Business Today Egypt](https://www.businesstodayegypt.com/Tag/66047/InstaPay/1)
+- 10.7M consumer-finance customers (end-2025) — [LaunchBase Africa](https://launchbaseafrica.com/2026/01/15/why-egypts-10m-instalment-customers-have-become-africas-most-fought-over-fintech-asset/)
+- 43% ROSCA participation (2018 study) — [Vice](https://vice.com/en/article/nearly-two-thirds-of-egyptians-dont-use-formal-bank-accounts-v24n7)
+- Inflation assumption of about 13% a year, between the 12.7% nationwide and 14.5% urban readings for August 2026 — [Ahram Online](https://english.ahram.org.eg/News/576399.aspx)
+
+### A. Normalized frictions implied by how people cope
+
+**A1. The hidden inflation cost of late gam'eya slots, and the organizer's unpaid burden — INFERRED (scale partly documented)**
+- *What:*
+  - In a traditional gam'eya every member receives the same nominal pot. Late recipients therefore lend interest-free to early ones.
+  - The organizer (usually one trusted person) chases payments by hand and absorbs the risk if someone defaults.
+- *Reasoning and evidence:*
+  - At about 13% annual inflation, the last payout of a 10-month circle buys roughly 9% less than the first: 1 − 1/1.13^(9/12) ≈ 8.8%. In a 12-month circle the gap is about 11%: 1 − 1/1.13^(11/12) ≈ 10.6%. These are my calculations from the August 2026 inflation readings — [Ahram Online](https://english.ahram.org.eg/News/576399.aspx). Members rarely price this in.
+  - MoneyFellows has more than 8.5M users and is profitable — [CairoScene](https://cairoscene.com/Business/MoneyFellows-Raises-13M-to-Expand-Savings-Circles-Beyond-Egypt); [MEA Tech Watch](https://meatechwatch.com/2025/10/21/egypts-money-fellows-surpasses-1-5-billion-in-transactions-achieves-profitability/). That shows people will move the practice into an app once it adds safety.
+- *People affected:* about 30M adults if the 2018 participation rate still holds (70.5M × 43%). Low confidence, because the rate is old.
+- *Software angle:* a non-custodial organizer that keeps a payment log, sends reminders, records proof of payment, and shows inflation-adjusted slot values so circles can price late slots fairly. Free for members; premium for organizers.
+
+**A2. Unrecorded loans among relatives, friends and colleagues — INFERRED**
+- *What:* small loans (سلف) are tracked from memory. Lenders feel too embarrassed to ask, borrowers forget, and inflation quietly shrinks what lenders get back.
+- *Reasoning and evidence:*
+  - Consumer finance grew 57% to EGP 96.3bn in 2025 — [MENA Startup Digest](https://menastartupdigest.com/egypts-consumer-finance-sector-skyrockets-57-to-1-8-billion-fra-reports/). That shows strong demand for credit.
+  - About 15.8M adults have no active account (derived) and so cannot borrow formally at all.
+  - Findex 2025 measures borrowing from family and friends — [LHoFT](https://lhoft.com/finance/global-findex-database-2025/) — but the Egypt value was not retrieved.
+- *People affected:* order-of-magnitude guess of 15–30M adults. This assumes 20–40% of adults lend or borrow informally each year; no Egyptian figure was retrieved.
+- *Software angle:* a shared IOU ledger with polite WhatsApp reminders and an optional inflation-adjusted repayment view. It works better as a viral feature of a broader money app than as a standalone business.
+
+**A3. Neighborhood shop tabs kept in paper notebooks (الشُكُك / الآجل) — INFERRED (no data)**
+- *What:* households buy groceries on monthly credit from the local grocer (بقال). The only record is the shopkeeper's notebook. Disputes and surprise totals at month-end follow, and the shopkeeper carries the risk.
+- *Reasoning:*
+  - Cash dominance suggests the practice persists: cash on delivery is preferred by 51% of online shoppers — [eGrow](https://www.egrow.com/en/blog/the-state-of-cod-e-commerce-in-2026-markets-trends-and-opportunities) — and about 15.8M adults have no account.
+  - So does the gap between when wages arrive and when spending happens.
+  - No Egyptian data was found.
+- *People affected:* unknown; plausibly millions of households.
+- *Software angle:* a shared digital tab that both the shop and the customer can see. Free for customers; subscription or payments revenue from shops. UNVERIFIED LEAD: similar ledger apps have reportedly scaled to tens of millions of users in India.
+
+**A4. "Proxy payers": elderly and non-digital people depend on children, neighbors or kiosk agents — INFERRED (scale partly documented)**
+- *What:* parents ask their children to pay bills, top up prepaid meters or check pension deposits. The helper has no remote visibility, agents may charge extra, and the dependent person is exposed to scams.
+- *Evidence:*
+  - About 15.8M adults have no active account (derived).
+  - Fawry's model rests on a physical agent network and serves about 54.8M users a month — [Invest-Gate](https://invest-gate.me/news/fawry-posts-record-fy2025-results-with-57-revenue-growth/).
+  - Scams target the elderly before pension payment dates — [Akhbar El Yom](https://m.akhbarelyom.com/news/NewDetails/4873266/1/تحذير-هام-لمستخدمي-إنستاباي--حيلة-جديدة-).
+  - Inclusion for women (71.4%) and youth (56.8%) lags the 77.6% average — [Business Today Egypt](https://www.businesstodayegypt.com/amp/1/7152/Egypt-s-financial-inclusion-rate-hits-77-6-by-2025).
+- *People affected:* at least 15.8M adults fully outside formal accounts. Add an unknown share of account holders who rely on others to operate their accounts. On the helper side there are millions of adult children, including relatives abroad (see B7).
+- *Software angle:* a "family mode". An adult child, in Egypt or abroad, sees a parent's bills, payment alerts and suspicious messages, can pay on the parent's behalf, and gets scam warnings. Willingness to pay most likely sits with the adult child.
+
+**A5. Cash spending is invisible to any tracker — INFERRED**
+- *What:* wages, rent, groceries, transport and gam'eya contributions are often paid in cash. SMS-based trackers therefore capture only part of a household's spending, and people abandon budgeting apps.
+- *Evidence:*
+  - About 15.8M adults have no account (derived).
+  - Cash on delivery is preferred by 51% of online shoppers — [eGrow](https://www.egrow.com/en/blog/the-state-of-cod-e-commerce-in-2026-markets-trends-and-opportunities).
+  - Existing trackers such as Masareef depend on SMS and payment alerts — [Peerlist](https://peerlist.io/boogado66/project/masareef).
+- *People affected:* all of the roughly 15.8M unbanked adults, plus most of the 54.7M account holders for part of their spending.
+- *Software angle:*
+  - Logging by Egyptian-Arabic voice or receipt photo (for example, saying "دفعت ٥٠ جنيه عيش").
+  - An automatic "unexplained cash" estimate derived from ATM withdrawals.
+
+**A6. Family money coordination over WhatsApp — INFERRED (no data)**
+- *What:* families coordinate shared money in chats and from memory, which causes friction:
+  - Siblings split parents' bills and medicine.
+  - Families pool money for weddings, funerals and school fees.
+  - Relatives abroad send money for specific purposes.
+- *Evidence:* remittances of $41.5bn in 2025 — [Amwal Al Ghad](https://en.amwalalghad.com/?p=225496) — show very large flows within families. There is no direct data on pooling.
+- *People affected:* unknown; potentially most extended families.
+- *Software angle:* a shared family expense split and wallet view with Egyptian categories. It pairs naturally with A4 and B7.
+
+**A7. Paper receipts and warranty cards for financed appliances get lost — INFERRED**
+- *What:* the warranty card, invoice and installment contract live in a drawer. When the fridge fails, the proof is missing.
+- *Evidence:* electronics and electrical devices (19.6%) plus home appliances (15.7%) made up 35.3% of 2025 consumer-finance value, about EGP 34bn (derived) — [MENA Startup Digest](https://menastartupdigest.com/egypts-consumer-finance-sector-skyrockets-57-to-1-8-billion-fra-reports/)
+- *People affected:* a large share of the 10.7M consumer-finance customers, plus cash buyers.
+- *Software angle:* a receipt and warranty vault with expiry reminders. It is a cheap add-on to an installments tracker, with possible revenue from extended-warranty or repair partners.
+
+**A8. "Am I being overcharged?" Prices are volatile and there is no local reference price — INFERRED (volatility documented)**
+- *What:* prices for vegetables, meat and staples change from week to week and differ between shops. Households lack a trusted local reference, especially in traditional markets.
+- *Evidence:* in August 2026 vegetable prices fell 7% month-on-month yet were 27.7% higher year-on-year, and meat and poultry fell 1.5% month-on-month — [Arab News PK](https://www.arabnews.pk/business/egypt-inflation-eases-to-127-in-august-as-food-prices-fall-3000858). Urban inflation was 14.5%.
+- *People affected:* essentially all urban households; no count was retrieved.
+- *Software angle:* a crowdsourced neighborhood price board, fed by receipt photos and quick check-ins, that powers basket comparison (section 5). Revenue would come from brands and retailers.
+
+### B. Pain points emerging from recent or upcoming changes
+
+**B1. Juggling channels to avoid fees since InstaPay began charging in April 2025 — DOCUMENTED change, INFERRED behavior**
+- *What:* users now weigh InstaPay fees against wallets and bank apps for each transfer, without knowing which route is cheapest.
+- *Evidence:* fees were introduced in April 2025 — [Egyptian Streets](https://egyptianstreets.com/2025/04/03/instapay-now-charging-transfer-fees) — and InstaPay turned profitable a year later — [Zawya](https://www.zawya.com/en/economy/north-africa/egypt-instapay-turns-profitable-a-year-after-transfer-fee-rollout-rt18pyrt). The fees are therefore staying.
+- *People affected:* 11.5M+ InstaPay users (November 2024) — [Business Today Egypt](https://www.businesstodayegypt.com/Tag/66047/InstaPay/1).
+- *Software angle:* a "cheapest way to send" helper inside a money app. Low value as a standalone product.
+
+**B2. New fraud patterns riding on instant payments — partly DOCUMENTED, specific patterns INFERRED**
+- *What:* likely patterns include:
+  - Fake transfer screenshots sent to sellers.
+  - Phishing links that copy bank or InstaPay pages.
+  - Calls that harvest one-time codes.
+  - "I sent it to you by mistake, please send it back" refund scams.
+  - AI-generated impersonation of relatives or officials.
+
+  The last two are inferred by analogy with other instant-payment markets; there is no Egyptian incidence data.
+- *Evidence:*
+  - Media warnings describe AI-enabled scams exploiting InstaPay and fake bank sites aimed at the elderly — [Akhbar El Yom](https://m.akhbarelyom.com/news/NewDetails/4873266/1/تحذير-هام-لمستخدمي-إنستاباي--حيلة-جديدة-).
+  - There were about 1,200 e-fraud reports in Q1 2024 — [Mohamah.net](https://www.mohamah.net/law/?p=129704). That is almost certainly a small fraction of attempts, given 717.7M wallet transactions in a single quarter — [MEA Tech Watch](https://meatechwatch.com/2025/09/16/egypts-mobile-wallet-transactions-surge-72-in-q2-2025-to-egp-943-4-billion/).
+  - More than 2,300 fraudulent websites have been blocked since 2023 — [Al-Dostor](https://www.dostor.org/5276991).
+- *People affected:* the exposure base is 46.3M active wallets and 11.5M+ InstaPay users. Incidence is unknown.
+- *Software angle:* an on-device scam shield that combines:
+  - A classifier for phishing SMS and links.
+  - A crowdsourced scam-number registry.
+  - A "did the money actually arrive?" confirmation for sellers.
+
+**B3. Energy-bill shocks from stepwise government price increases — DOCUMENTED price moves, INFERRED budgeting pain**
+- *What:* electricity, gas and fuel prices rise in steps, so monthly bills jump unpredictably and households on prepaid meters run out of credit unexpectedly.
+- *Evidence:* electricity, gas and fuel prices rose 4.3% in August 2026 alone — [Arab News PK](https://www.arabnews.pk/business/egypt-inflation-eases-to-127-in-august-as-food-prices-fall-3000858).
+- *People affected:* nearly all households, since electricity access is near-universal (no count retrieved).
+- *Software angle:* bill forecasts and "bill shock" alerts built from past bills and SMS, plus meter top-up reminders.
+
+**B4. Savers' reinvestment shock as high-yield certificates mature — INFERRED / PREDICTED (premises unverified)**
+- *What:* many savers locked money into high-yield bank certificates in 2023–2024. As these mature into a lower-rate environment, savers must choose among lower certificate rates, gold, funds, gam'eya apps or property, with little neutral guidance.
+- *Evidence:* alternatives are growing fast:
+  - myFawry gold and EGX30 index funds — [Invest-Gate](https://invest-gate.me/news/fawry-posts-record-fy2025-results-with-57-revenue-growth/).
+  - Thndr's 4M+ users — [FinTech Global](https://fintech.global/2025/05/19/egyptian-fintech-thndr-secures-15-7m-to-scale-digital-investing-across-mena/).
+  - Bars and coins at 55.8% of gold demand — [Enterprise](https://enterpriseam.com/egypt/2026/08/13/in-2q-gold-backs-off-record-highs-but-major-buyers-keep-stacking/).
+
+  UNVERIFIED LEADS: the certificate rates offered in 2023–2024, and CBE rate cuts in 2025–2026.
+- *People affected:* unknown, because certificate-holder counts were not retrieved; likely millions of middle-class savers.
+- *Software angle:* a neutral "where should my maturing certificate go?" tool comparing real, inflation-adjusted returns across certificates, gold and funds. Revenue from affiliate fees with licensed providers, subject to FRA and CBE rules.
+
+**B5. Confusion and scams around new "fractional" and app-based investment products — INFERRED / PREDICTED**
+- *What:* as fractional gold, fractional real estate and app-based funds multiply, ordinary savers struggle to tell licensed products apart from look-alike schemes promising high returns.
+- *Evidence:*
+  - In November 2025 the FRA chairman described a "fractional ownership revolution" covering property and precious metals — [FRA](https://fra.gov.eg/en/?p=19322271).
+  - FRA Decision 125 of 2025 regulates digital real-estate platforms — [Amwal Al Ghad](https://en.amwalalghad.com/?p=212954).
+  - Digital gold can be bought from EGP 5 via Orange Cash — [Al-Ahram Gate](https://gate.ahram.org.eg/News/5292454.aspx).
+- *People affected:* the growing base of app investors (Thndr 4M+ users; myFawry 24.2M downloads). The incidence of scams is unknown.
+- *Software angle:* an "is this licensed?" checker that looks up FRA and CBE licensees and runs a red-flag checklist. It could live inside the scam shield.
+
+**B6. Buying a used phone that later gets blocked — INFERRED (depends on an unverified regulatory lead)**
+- *What:* if imported phones must be registered and taxed or else be blocked (UNVERIFIED LEAD: rules applied through the "Telephony" app from January 2025), second-hand buyers risk paying for a device that stops working on mobile networks.
+- *People affected:* unknown; second-hand phone buyers (no data).
+- *Software angle:* an IMEI and registration-status check, combined with escrow for phone deals on Dubizzle and Facebook.
+
+**B7. Money from relatives abroad lacks purpose control and visibility — INFERRED (scale documented)**
+- *What:* senders abroad often want money to go to specific bills, school fees or medicine, and families want to show where it went. Today it arrives as cash and is accounted for over the phone.
+- *Evidence:*
+  - Remittances reached $41.5bn in 2025 and $47.3bn in FY2025/26 — [Amwal Al Ghad](https://en.amwalalghad.com/?p=225496); [The Star](https://www.thestar.com.my/news/world/2026/08/21/egyptian-expat-remittances-hit-record-473-bln-usd-in-fy-2025-2026).
+  - The CBE plans to open InstaPay to remittances from the Gulf — [Business Today Egypt](https://www.businesstodayegypt.com/amp/1/5465/Egypt-to-enable-Gulf-remittances-via-InstaPay-in-2-months).
+- *People affected:* families receiving about $3.5–4bn a month; the number of senders and recipients was not retrieved.
+- *Software angle:* "remit-to-purpose", where a sender abroad pays a parent's bills or groceries directly, combined with family-mode visibility (A4).
+
+### C. Hidden costs people rarely notice
+
+**C1. Installment stacking and opaque true cost — INFERRED (scale documented)**
+- *What:* buyers compare monthly installments rather than total cost or effective interest rate. Many take plans from several providers at once, so total monthly obligations creep up.
+- *Evidence:*
+  - There were 10.7M consumer-finance customers and EGP 96.3bn financed in 2025 — [LaunchBase Africa](https://launchbaseafrica.com/2026/01/15/why-egypts-10m-instalment-customers-have-become-africas-most-fought-over-fintech-asset/); [MENA Startup Digest](https://menastartupdigest.com/egypts-consumer-finance-sector-skyrockets-57-to-1-8-billion-fra-reports/).
+  - In H1 2025 valU's gross revenue grew faster (+94%) than its loans issued (+60%) — [Techpoint Africa](https://techpoint.africa/news/egyptian-fintech-valu-h1-results/). That is consistent with more revenue per pound lent. This is my inference; it could also reflect tenor mix or fees.
+  - The FRA raised the consumer "pre-financing" limit to EGP 50,000 — [FRA](https://fra.gov.eg/en/?p=16517249).
+- *People affected:* up to 10.7M consumer-finance customers; the share stacking several plans is unknown.
+- UNVERIFIED LEAD: informal installment sellers often require borrowers to sign "trust receipts" (إيصالات أمانة), which carry criminal liability on default (the "الغارمات" phenomenon). This would mean severe downside for low-income borrowers.
+- *Software angle:* a "true cost" calculator, an all-installments dashboard, and an affordability check before each purchase.
+
+**C2. Losses when reselling gold — INFERRED (fee increases documented)**
+- *What:*
+  - Workmanship and stamping fees are not recovered when jewellery is sold.
+  - Buyback deductions are opaque.
+  - Invoices get lost over the years, weakening the seller's position.
+- *Evidence:*
+  - Workmanship rose 35% in November 2024 and another 15–20% in January 2025 — [Al-Dostor](https://www.dostor.org/4988682).
+  - The shift to bars and coins (55.8% of Q2 2026 demand) — [Enterprise](https://enterpriseam.com/egypt/2026/08/13/in-2q-gold-backs-off-record-highs-but-major-buyers-keep-stacking/) — is consistent with buyers avoiding workmanship they cannot recover. That link is my inference.
+- *People affected:* gold-buying households (Egyptians bought 22t in H1 2026 — [Okaz](https://www.okaz.com.sa/economy/na/2259227)); household counts are unknown.
+- *Software angle:* a gold vault (photos, invoices, weight, karat, workmanship paid) with a fair resale estimate and buyback quotes from jewellers.
+
+**C3. Silent fees and subscription creep — INFERRED**
+- *What:* SMS-alert fees, card fees, transfer fees and auto-renewing subscriptions are deducted in small amounts that people never add up.
+- *Evidence:*
+  - Banks sell SMS alerts as a service — [SAIB PDF](https://www.saib.com.eg/media/2075/sms.pdf).
+  - InstaPay has charged fees since April 2025 — [Egyptian Streets](https://egyptianstreets.com/2025/04/03/instapay-now-charging-transfer-fees).
+  - Competitors already market subscription tracking, which signals demand — [Peerlist](https://peerlist.io/boogado66/project/masareef).
+- *People affected:* some share of the 54.7M account holders; unknown.
+- *Software angle:* a "fees and subscriptions x-ray", a premium feature with high perceived value for an SMS tracker.
+
+**C4. End-of-month cash crunch and costly stopgaps — INFERRED**
+- *What:* households run short before payday and bridge the gap with help from relatives, shop credit or consumer finance.
+- *Evidence:*
+  - Consumer-finance value grew 57% in 2025 — [MENA Startup Digest](https://menastartupdigest.com/egypts-consumer-finance-sector-skyrockets-57-to-1-8-billion-fra-reports/).
+  - Fawry's lending book grew 82.6% — [Invest-Gate](https://invest-gate.me/news/fawry-posts-record-fy2025-results-with-57-revenue-growth/).
+- *People affected:* unknown; likely a large share of wage earners.
+- *Software angle:* a cash-flow forecast with alerts timed to payday. Avoid direct lending (it needs a licence); partner referrals are possible.
+
+**C5. Wedding and trousseau (جهاز) costs — INFERRED (weak evidence)**
+- *What:* families save for years, using gam'eyas, gold and installments, to buy gold for the شبكة and appliances and furniture for the جهاز. Budgets overrun as prices rise.
+- *Evidence:*
+  - Appliances and electronics are 35.3% of consumer-finance value (derived from [MENA Startup Digest](https://menastartupdigest.com/egypts-consumer-finance-sector-skyrockets-57-to-1-8-billion-fra-reports/)).
+  - Jewellery demand was 4.9t in Q2 2026 — [Enterprise](https://enterpriseam.com/egypt/2026/08/13/in-2q-gold-backs-off-record-highs-but-major-buyers-keep-stacking/).
+  - No direct data on wedding spending was retrieved.
+- *People affected:* unknown; marriage counts were not retrieved.
+- *Software angle:* a wedding and trousseau planner with checklists, price comparison and installment planning. Revenue would come from retailer and lender partnerships.
+
+### Prioritization (inferred)
+| Rank | Latent pain cluster | Why it ranks here | Who would pay |
+|---|---|---|---|
+| 1 | Family mode: proxy payments, scam protection for elderly relatives, purpose control for money from abroad (A4, B2, B7) | About 15.8M adults outside formal accounts; documented scams aimed at the elderly; $41.5bn in remittances (2025); emotionally compelling; pure software on top of existing payment rails | Adult children and relatives abroad (subscription); banks and telcos (B2B) |
+| 2 | Informal-finance ledger: gam'eya, family loans, shop tabs (A1–A3) | About 30M potential gam'eya participants if the 2018 rate holds; spreads virally through WhatsApp; MoneyFellows proves people will move this to an app | Freemium for organizers and shops; partner referrals |
+| 3 | Hidden-cost x-ray: installments, fees, subscriptions (C1, C3) | 10.7M consumer-finance customers; new and changing fees; differentiates an SMS tracker from Masareef and similar apps | Premium tier; lender and insurer referrals (check regulation) |
+| 4 | Gold vault and resale fairness (C2) | Bars and coins are now the majority of demand; workmanship fees keep rising | Jeweller leads; digital-gold affiliate fees |
+| 5 | Local reference prices and bill-shock alerts (A8, B3) | Affects almost everyone, but consumers will pay little | Brands and retailers; bundled into a larger app |
+| 6 | Savings transition advisor and "is it licensed?" checker (B4, B5) | Predicted pain; some premises unverified; regulated territory | Affiliate fees (regulated) |
+
+### Gaps
+- No survey data was available to confirm any inferred pain point. Apart from figures derived from CBE, NTRA and FRA counts, all people-affected numbers are guesses with stated assumptions.
+- No Egyptian data was retrieved on informal lending, shop credit, proxy payments, wedding costs or certificate holders. The search budget was exhausted and page fetches were blocked.
+- UNVERIFIED LEADS used in this section, to verify before use:
+  - Phone-registration rules via the "Telephony" app (B6).
+  - Certificate rates offered in 2023–2024 and CBE rate cuts in 2025–2026 (B4).
+  - The trust-receipt / الغارمات practice (C1).
+  - Indian ledger apps as analogues (A3).
